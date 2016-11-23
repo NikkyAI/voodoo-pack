@@ -17,7 +17,7 @@ from .types import RLType, DependencyType
 complete_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2"
 complete_timestamp_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2.txt"
 
-parser = argparse.ArgumentParser(description="Download Curse modpack mods")
+parser = argparse.ArgumentParser(description="Download mods from curseforge and other sources")
 parser.add_argument("--auth", help="auth file for curse login")
 parser.add_argument("--config", help="path to config file")
 parser.add_argument("--username", help="curse login")
@@ -49,7 +49,7 @@ if not outputDir.exists():
     outputDir.mkdir(parents=True, exist_ok=True)
 downloadUrls = config.get('urls', False)
 
-downloaderDirs = appdirs.AppDirs(appname="cursePacker", appauthor="nikky")
+downloaderDirs = appdirs.AppDirs(appname="cfpecker", appauthor="nikky")
 cache_path = Path(downloaderDirs.user_cache_dir, "packCache")
 if not cache_path.exists():
     cache_path.mkdir(parents=True)

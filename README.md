@@ -19,12 +19,13 @@ supports optional mods
 ## setup and execution
 
 execute `setup.sh` or `setup.bat` once to install the required packages
-execute `run.sh` or `run.bat`
+
+execute `run.sh` or `run.bat` to build the packs
 
 ## Configuration
 ### main config file 
-`config/config.yaml`
 example:
+`config/config.yaml`
 
 ```yaml
 authentication: auth.yaml
@@ -33,28 +34,33 @@ modpacks:
   - magical_mayhem.yaml
 urls: true
 ```
-#### authentication:
-    path to a file containing
-    
+
+- `authetication`: str   
+  path to a file containing username and password   
+  example:   
     ```yaml
-    username: login
+    auth.yaml
+    ---
+    username: login@email.tld
     password: password
     ```
+  - optional
+  - default: none
+- `output`: str   
+  path tothe output folder for modpacks
+  - optional
+  - default: `modpacks/`
+- `modpacks`: List[str]   
+  list of Paths to modpack config files relative to the parent folder of the config file
+  - required
+- urls: bool   
+  enable saving .url.txt files next to the mod jars
+  - optional
+  - default: `false`
 
-#### output
-    path to the default modpack output folder
-    default value: `modpacks`
-
-#### modpacks
-    list of modpack config files in `config/`
-
-#### urls
-    decides to save a .url.txt file next to the downloaded files
-    
-    
 ### modpack config files
-`config/%modpack%.yaml`
 example:
+`config/%modpack%.yaml`
 
 ```yaml
 output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
@@ -87,30 +93,30 @@ mods:
 - Extra Utilities
 ```
 
-#### output
 - `output`: str
-    default: `modpack/`
-    this has to match with the src folder in from the creatortools 
-    
+  - default: `modpack/`
+  - info: this has to match with the src folder in from the creatortools 
 - `mc_version`: str
-    default: `1.10.2`
-
+  - optional
+  - default: `1.10.2`
 - `optionals`: bool
-    download optional dependencies of curseforge mods
-    default: `true`
-    
+  - info: download optional dependencies of curseforge mods
+  - optional
+  - default: `true`
 - `release_type` List[str]
-    optional
-    default: `Release`, `Beta`
-    values:
-      - `Release`
-      - `Beta`
-      - `Alpha`
-    example:
+  - optional
+  - default: `Release`, `Beta`
+  - values:
+    - `Release`
+    - `Beta`
+    - `Alpha`
+  - example:
     ```yaml
     - Alpha
     - Beta
     ```
+  - mods: List  
+  see [mods](#mods)
 
 
 #### mods
@@ -134,18 +140,18 @@ example entries
 
 a entry can be
 
-- int (see short forms id)
-- string (see short forms name)
+- int (see [short formss id](#id))
+- string (see [short forms name](#name)
 - dict
 
-###### short forms
+##### short forms
 
-id:
-```- 228756``` –> ```- project_id: 228756```
+###### id
+```- 228756``` –> ```- project_id: 228756```   
 ```- curse: Extra 228756``` –> ```- project_id: 228756```
 
-name:
-```- Extra Utilities``` –> ```- name: Extra Utilities```
+###### name
+```- Extra Utilities``` –> ```- name: Extra Utilities```   
 ```- curse: Extra Utilities``` –> ```- name: Extra Utilities```
 
 ##### types
@@ -161,16 +167,16 @@ keys:
 - `name`: str
 - `project_id`: int
 - `mc_version`: str
-    optional
+  - optional
 - `version`: str
-    optional
-    check if `version` is in the filename 
+  - optional
+  - check if `version` is in the filename 
 - `release_type` List[str]
-    optional
-    values:
-      - `Release`
-      - `Beta`
-      - `Alpha`
+  - optional
+  - values:
+    - `Release`
+    - `Beta`
+    - `Alpha`
 
 `name` or `project_id` are required
     
@@ -197,11 +203,11 @@ changes the folder for the mod to `_CLIENT` or `_SERVER`
 keys: 
 
 - `side`: str
-    - values:
-        - `client`
-        - `server`
+  - values:
+    - `client`
+    - `server`
 
-see https://github.com/SKCraft/Launcher/wiki/Creating-Modpacks#marking-files-client-or-server-only
+see [SKCraft/Launcher/wiki/Creating-Modpacks#marking-files-client-or-server-only](https://github.com/SKCraft/Launcher/wiki/Creating-Modpacks#marking-files-client-or-server-only)
 
 ##### optinal features
 
@@ -217,19 +223,19 @@ feature:
 
 keys:
 
-- `feature`
-    - `name`: 
-      optional
-      default: `projectname` or `filename`
-    - `description`: 
-      optional
-    - `recommendation`
-      values:   
-        - `starred`
-        - `avoid`
-    - `selected`: 
-    values: 
-        - `true`
-        - `false`
+- `feature`: dict
+  - `name`: str
+    - optional
+    - default: `projectname` or `filename`
+  - `description`: str
+    - optional
+  - `recommendation`: bool
+    - values
+      - `starred`
+      - `avoid`
+  - `selected`: bool
+    - values 
+      - `true`
+      - `false`
 
-see https://github.com/SKCraft/Launcher/wiki/Optional-Features#via-infojson-files
+see [SKCraft/Launcher/wiki/Optional-Features#via-infojson-files](https://github.com/SKCraft/Launcher/wiki/Optional-Features#via-infojson-files)
