@@ -1,0 +1,75 @@
+---
+#output: "../../minecraft/mindlesspuppetz/modpacks/sinful_skies/src/"
+mcversion: 1.10.2
+optionals: false
+release_type:
+- Release
+- Beta
+- Alpha
+mods:
+- AppleCore
+- AppleSkin
+- AtomicStryker's Infernal Mobs
+- BdLib
+- Better Agriculture
+- Bloodmoon
+- Chameleon
+- Chance Cubes
+- Chisel
+- Chisels & Bits
+- CodeChicken Core 1.8.+
+- CoroUtil
+- CraftTweaker
+- Custom Main Menu
+- Death Counter
+- DecoCraft2
+- Drawers & Bits
+- Enchiridion
+- Ex Nihilo Omnia
+- Excore
+- Extra Bit Manipulation
+- Extra Utilities
+- Forestry
+- 'FTB Utilities '
+- FTBLib
+- Hard Mode Tweaks
+- Hardcore Darkness
+- Hardcore Wither
+- HelpFixer
+- Hopper Ducts
+- Immersive Engineering
+- InGame Info XML
+- Inventory Tweaks
+- JourneyMap
+- Just Enough Items (JEI)
+- LunatriusCore
+- Lycanites Mobs
+- Mantle
+- MCMultiPart
+- Mob Properties
+- ModTweaker
+- Mouse Tweaks
+- MTLib
+- Natura
+- Neat
+- NetherPortalFix
+- No Doze
+- Not Enough Items 1.8.+
+- Ore Excavation
+- Pam's HarvestCraft
+- Precise Time
+- Resource Loader
+- Simple Covers
+- Sound Filters
+- Stackie
+- Storage Drawers
+- The Spice of Life
+- Tinkers Construct
+- Tinkers' Tool Leveling
+- Tough As Nails
+- Tree Growing Simulator
+- TUMAT
+- Twisted Tweaks
+- VillagerTradingBan
+- YUNoMakeGoodMap
+- Zombie Awareness

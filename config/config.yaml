@@ -1,0 +1,5 @@
+#authentication: ../private/auth.yaml
+output: modpacks
+modpacks:
+  - sinful_skies.yaml
+urls: true
