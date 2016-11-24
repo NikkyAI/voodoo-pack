@@ -4,6 +4,7 @@ import argparse
 import codecs
 import os
 import sys
+
 print('using encoding {}'.format(sys.stdout.encoding))
 
 from curseforge.cf_util import *
@@ -12,7 +13,7 @@ import yaml
 ProjectData = get_project_data()
 print("data len: {}".format(len(ProjectData) / (1024.0 * 1024.0)))
 modnames = [p['Name'] for p in ProjectData if p["PackageType"] == 6]
-with codecs.open(str(outputDir / 'modlist.txt'), "w",  encoding='utf8') as modlist:
+with codecs.open(str(outputDir / 'modlist.txt'), "w", encoding='utf8') as modlist:
     modlist.write("\n".join(modnames))
 
 for packConfigFile in config["modpacks"]:
@@ -36,13 +37,15 @@ for packConfigFile in config["modpacks"]:
 
     for mod in mods:
         curse_parameter = None
+        giithub_parameter = None
         download_parameter = {}
         if isinstance(mod, str):
             curse_parameter = {'name': mod}
         elif isinstance(mod, int):
             curse_parameter = {'project_id': mod}
         elif isinstance(mod, dict):
-            print(mod)
+            if args.debug:
+                print('downloading\n\t{}'.format(mod))
 
             # side and feature
             # TODO clean up by copying values
@@ -55,23 +58,56 @@ for packConfigFile in config["modpacks"]:
 
             if 'direct' in mod:
                 # direct download url
-                print('direct downloads are not fully implemented')
+                print('direct downloads are NOT FULLY IMPLEMENTED (no caching or checksum validation)')
                 direct_urls.append({'direct': mod['direct']})
                 download_parameter['direct'] = mod['direct']
                 download_parameter['type'] = 'direct'
+                print('added {} to download queue'.format(mod['direct']))
 
-                # continue
             elif 'github' in mod:
                 # github download id
-                print('github releases are not yet implemented')
+                # name/repo
+                print('github releases are NOT YET IMPLEMENTED')
+                print('ignoring: {}'.format(mod['github']))
+                pass
+                github = mod['github']
+                if isinstance(mod['github'], dict):
+                    github_parameter = mod['github']
+                elif isinstance(mod['github'], str):
+                    repo_branch = mod['github'].split('/', 1)
+                    if len(repo_branch) == 2:
+                        repo = repo_branch[0]
+                        branch = repo_branch[1]
+                        github = {'repo': repo, 'branch': branch}
                 continue
 
+            elif 'jenkins' in mod:
+                # name/job
+                jenkins = mod['jenkins']
+                if isinstance(mod['jenkins'], dict):
+                    if 'url' not in jenkins:
+                        print('no jenkins url')
+                        continue
+                    if 'name' not in jenkins and 'job' not in jenkins:
+                        print('no job or name provided')
+                        continue
+
+                    download_parameter['type'] = 'jenkins'
+                    download_parameter['jenkins'] = jenkins
+
+                else:
+                    print('unknown data {}'.format(jenkins))
+                    continue
+
             elif 'curse' in mod:
-                if isinstance(mod['curse'], str):
+                if isinstance(mod['curse'], dict):
+                    curse_parameter = mod['curse']
+                elif isinstance(mod['curse'], str):
                     curse_parameter = {'name': mod['curse']}
                 elif isinstance(mod['curse'], int):
                     curse_parameter = {'project_id': mod['curse']}
-
+                else:
+                    continue
             else:
                 curse_parameter = {
                     key: mod[key] for key
@@ -96,8 +132,11 @@ for packConfigFile in config["modpacks"]:
                 continue
 
         # print(mod)
-        # print(download_parameter)
-        downloads.append(download_parameter)
+        if download_parameter:
+            downloads.append(download_parameter)
+        else:
+            print('error with: {}'.format(mod))
+            print(type(mod))
 
     download(modpackFolder, download_list=downloads, curse_optional=download_optional)
     # download(modpackFolder, curse_id_list=curse_ids, direct_url_list=direct_urls, curse_optional=download_optional)

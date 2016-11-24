@@ -1,7 +1,7 @@
 #!/bin/python3
 import argparse
 from typing import Mapping, Dict, List, Any, Tuple
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse, unquote, quote, urljoin, urlunparse, urlunsplit
 import appdirs
 import json
 from pathlib import Path
@@ -10,7 +10,9 @@ import shutil
 import bz2
 import rfc6266
 import yaml
+from html import escape as html_escape
 from lxml import html
+
 
 from .types import RLType, DependencyType
 
@@ -22,6 +24,7 @@ parser.add_argument("--auth", help="auth file for curse login")
 parser.add_argument("--config", help="path to config file")
 parser.add_argument("--username", help="curse login")
 parser.add_argument("--password", help="curse password")
+parser.add_argument("--debug", dest="debug", action="store_true", help="display debug info")
 args, unknown = parser.parse_known_args()
 
 
@@ -35,7 +38,10 @@ if config_suffix == '.json':
     config = json.loads(configPath.open().read())
 elif config_suffix == '.yaml':
     config = yaml.load(configPath.open().read())
-print(yaml.dump(config))
+if args.debug:
+    print(configPath.name)
+    print('---')
+    print(yaml.dump(config))
 
 auth_file = args.auth or config.get('authentication', None)
 
@@ -139,7 +145,7 @@ def find_curse_file(mc_version: str=defaultGameVersion,
 
     # process project
     if not found:
-        print(name + ' not found')
+        print(name or str(project_id) + ' not found')
         return -1, -1, ''
 
     project_id = project["Id"]
@@ -178,20 +184,12 @@ def find_curse_file(mc_version: str=defaultGameVersion,
              and mc_version in f['game_version']
              and RLType.get(f['release_type']) in release_type]
     if files:
-        # print('filtered files:')
-        # for file in files:
-        #    print('{0[release_type]} {0[id]} {0[file_name]}: {0[game_version]}'.format(file))
-
         # TODO make sure sorting with arrays as values works
         # sort by version (in name) descending, so highest version first
         files.sort(key=lambda x: (x['game_version']), reverse=True)
         # sort by release type so that alpha, beta, release ordering is achieved
         files.sort(key=lambda x: RLType.get(x['release_type']), reverse=True)
         file = files[0]
-        # print('sorted files:')
-        # for file in files:
-        #    print('{0[release_type]} {0[id]} {0[file_name]}: {0[game_version]}'.format(file))
-        print('dependencies {}'.format(file['dependencies']))
         return project_id, file['id'], file['file_name']
 
     print('no matching version found for: {0[Name]} project url: {0[WebSiteURL]}'.format(project))
@@ -252,6 +250,10 @@ def download(minecraft_path: Path,
         if download_type == 'github':
             continue
 
+        if download_type == 'jenkins':
+            jenkins_parameter = download_entry['jenkins']
+            file, name = download_jenkins(mods_path=effective_path, **jenkins_parameter)
+
         feature = download_entry.get('feature', None)
         if feature is not None:
             if file:
@@ -260,6 +262,46 @@ def download(minecraft_path: Path,
                         feature['name'] = name
                     info_dict = {'feature': feature}
                     json.dump(info_dict, info_file)
+
+
+def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master', build_type: str='lastStableBuild') -> (Path, str):
+    global iLen, i, session
+    _url = urlparse(url)
+    if not _url.scheme:
+        url = urlunsplit(('http', _url.path, '', '', ''))
+    branch_quote = quote(branch, safe='')
+    branch_quote = quote(branch_quote, safe='')
+    api_url = urljoin(url, 'job/{name}/branch/{branch_quote}/{build_type}/api/json'.format(**locals()))
+    r = requests.get(api_url)
+    r.raise_for_status()
+    if r.status_code == 200:
+        data = r.json()
+        artifacts = data['artifacts']
+        file_name = None
+        artifact_url = None
+        for artifact in artifacts:
+            file_name = artifact['fileName']
+            relative_path = artifact['relativePath']
+            if file_name.endswith('sources.jar') or file_name.endswith('api.jar') or file_name.endswith('deobf.jar'):
+                continue
+            artifact_url = urljoin(url, 'job/{name}/branch/{branch_quote}/{build_type}/artifact/{relative_path}'.format(**locals()))
+            break
+        if artifact_url:
+            # matching artifact
+            # TODO dependency cache
+            file_response = session.get(artifact_url, stream=True)
+            while file_response.is_redirect:
+                source = file_response
+                file_response = session.get(source, stream=True)
+
+            i += 1
+            print("[{}/{}] {} -> {}".format(i, iLen, artifact_url, file_name))
+
+            # write jarfile
+            path = mods_path / file_name
+            with open(str(path), "wb") as mod:
+                mod.write(file_response.content)
+    return None, ''
 
 
 def download_curse(mods_path: Path, project_id: int, file_id: int, download_optional: bool = False, download_list: List[Dict[str, Any]]=list(())) -> (Path, str):
@@ -287,9 +329,9 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
                 print(
                     'added {} dependency {} \nof {} at {}'.format(dep_type, file_name, addon['name'], iLen))
 
+    i += 1
     file_name_on_disk = file['file_name_on_disk']
     if downloadUrls:
-        i += 1
         url_file_name = "{}.url.txt".format(file_name_on_disk)
         print("[{}/{}] {}".format(i, iLen, url_file_name))
         with open(str(mods_path / url_file_name), "wb") as urlFile:
@@ -301,7 +343,7 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
         dep_files = [f for f in dep_cache_dir.iterdir()]
         if len(dep_files) >= 1:
             target_file = mods_path / dep_files[0].name
-            i += 1
+            # i += 1
             print("[{0:d}/{1:d}] {2:s} (cached)".format(i, iLen, target_file.name))
             shutil.copyfile(str(dep_files[0]), str(target_file))
 
@@ -388,7 +430,8 @@ def authenticate():
                 auth = yaml.load(auth_path.open().read())
         else:
             raise NameError('no_curse_authentication')
-    print('post https://curse-rest-proxy.azurewebsites.net/api/authenticate')
+    if args.debug:
+        print('post https://curse-rest-proxy.azurewebsites.net/api/authenticate')
     r = requests.post('https://curse-rest-proxy.azurewebsites.net/api/authenticate',
                       json=auth)
     r.raise_for_status()
@@ -409,9 +452,10 @@ def get_add_on(project_id: int) -> Dict[str, Any]:
     if not project_files:
         fileCache[project_id] = {}
         project_files = fileCache.get(project_id, None)
-    while not authorization:
+    if not authorization:
         authenticate()
-    print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}'
+    if args.debug:
+        print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}'
           .format(project_id))
     r = requests.get(
         'https://curse-rest-proxy.azurewebsites.net/api/addon/{0}'
@@ -434,9 +478,10 @@ def get_add_on_files(project_id: int) -> List[Dict[str, Any]]:
     if not project_files:
         fileCache[project_id] = {}
         project_files = fileCache.get(project_id, None)
-    while not authorization:
+    if not authorization:
         authenticate()
-    print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/files'.format(project_id))
+    if args.debug:
+        print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/files'.format(project_id))
     r = requests.get(
         'https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/files'
         .format(project_id), headers={'Authorization': authorization}
@@ -461,9 +506,10 @@ def get_add_on_file(project_id: int, file_id: int) -> Dict[str, Any]:
         fileCache[project_id] = {}
         project_files = fileCache.get(project_id, None)
 
-    while not authorization:
+    if not authorization:
         authenticate()
-    print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/file/{1}'.format(project_id, file_id))
+    if args.debug:
+        print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/file/{1}'.format(project_id, file_id))
     r = requests.get(
         'https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/file/{1}'
         .format(project_id, file_id),

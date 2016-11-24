@@ -7,8 +7,9 @@ with minimal configuration
 
 downloads mods from
 - curse
-- urls
-- github (NYI)
+- jenkins
+- github (not yet implemented)
+- direct (urls)
 
 downloads dependencies for curse mods
 
@@ -147,54 +148,105 @@ a entry can be
 ##### short forms
 
 ###### id
-```- 228756``` –> ```- project_id: 228756```   
-```- curse: Extra 228756``` –> ```- project_id: 228756```
+`- 228756` –> `- project_id: 228756`   
+`- curse: Extra 228756` –> `- project_id: 228756`
 
 ###### name
-```- Extra Utilities``` –> ```- name: Extra Utilities```   
-```- curse: Extra Utilities``` –> ```- name: Extra Utilities```
+`- Extra Utilities` –> `- name: Extra Utilities`   
+`- curse: Extra Utilities` –> `- name: Extra Utilities`
+
+###### dict
+if the entry does not contain one of the type keys `curse`, `github`, `jenkins`, `direct`
+the entry will be treated as type `curse`
+
+```yaml
+- name: JourneyMap
+  mc_version: 1.9
+``` 
+is equal to
+```yaml
+- curse
+    name: JourneyMap
+    mc_version: 1.9
+```
 
 ##### types
 
-###### cursefurge / curse
+###### curse
 
 example:
+```yaml
+- curse
+    name: Extra Utilities
+```
 ```yaml
 - name: Extra Utilities
 ```
 keys: 
-
-- `name`: str
-- `project_id`: int
-- `mc_version`: str
-  - optional
-- `version`: str
-  - optional
-  - check if `version` is in the filename 
-- `release_type` List[str]
-  - optional
-  - values:
-    - `Release`
-    - `Beta`
-    - `Alpha`
+- `curse`: dict
+    - `name`: str
+    - `project_id`: int
+    - `mc_version`: str
+      - optional
+    - `version`: str
+      - optional
+      - check if `version` is in the filename 
+    - `release_type` List[str]
+      - optional
+      - values:
+        - `Release`
+        - `Beta`
+        - `Alpha`
 
 `name` or `project_id` are required
-    
+
+###### jenkins 
+
+example:
+```yaml
+- jenkins:
+    url: http://ci.tterrag.com/
+    name: Chisel
+    branch: 1.10/dev
+```
+
+keys: 
+- `jenkins`: dict
+    - `url`: str
+    - `name`: str
+    - `branch_id`: str
+      - optional
+      - default: `master`
+    - `build_type`: str
+      - optional
+      - default: `lastStableBuild`
+      - values:
+        - `lastBuild`
+        - `lastStableBuild`
+        - `lastSuccessfulBuild`
+        - `lastFailedBuild`
+        - `lastUnstableBuild`
+        - `lastUnsuccessfulBuild`
+        - `lastCompletedBuild.`
+      
+
+###### github 
+(NYI)      
+
+
 ###### direct
 
 example:
 ```yaml
 - direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
 ```
-the target must serve a Content-Disposition Header   
+the target must serve the filename in a Content-Disposition Header for now  
 
 keys:
 
 - `direct`: str
     url
-    
-###### github 
-(NYI)
+
 
 ##### side
 

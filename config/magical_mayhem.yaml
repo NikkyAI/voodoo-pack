@@ -1,5 +1,5 @@
 ---
-output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
+# output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
 mc_version: 1.10.2
 optionals: true
 release_type:
@@ -7,6 +7,10 @@ release_type:
 - Beta
 - Alpha
 mods:
+- jenkins:
+    url: http://ci.tterrag.com/
+    name: Chisel
+    branch: 1.10/dev
 - name: JourneyMap
   version: map-1.10.2
   release_type:
@@ -21,8 +25,8 @@ mods:
     recommendation: none # | starred | avoid
     selected: false
 - github: copygirl/BetterStorage # NYI
-- 228756
-- curse: Chisel
+- 228756 #curse: project_id: 228756
+- curse: Chisel # curse: name: Chisel
   side: both # goes into mods/
 - direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
   side: client

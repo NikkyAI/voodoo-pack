@@ -1,5 +1,6 @@
 #authentication: ../private/auth.yaml
 output: modpacks
 modpacks:
-  - sinful_skies.yaml
+  - magical_mayhem.yaml
+#  - sinful_skies.yaml
 urls: true
