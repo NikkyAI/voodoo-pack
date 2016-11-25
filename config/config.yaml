@@ -1,4 +1,4 @@
-#authentication: ../private/auth.yaml
+authentication: ../private/auth.yaml
 output: modpacks
 modpacks:
   - magical_mayhem.yaml

@@ -37,7 +37,6 @@ for packConfigFile in config["modpacks"]:
 
     for mod in mods:
         curse_parameter = None
-        giithub_parameter = None
         download_parameter = {}
         if isinstance(mod, str):
             curse_parameter = {'name': mod}
@@ -58,28 +57,28 @@ for packConfigFile in config["modpacks"]:
 
             if 'direct' in mod:
                 # direct download url
-                print('direct downloads are NOT FULLY IMPLEMENTED (no caching or checksum validation)')
                 direct_urls.append({'direct': mod['direct']})
                 download_parameter['direct'] = mod['direct']
                 download_parameter['type'] = 'direct'
-                print('added {} to download queue'.format(mod['direct']))
 
             elif 'github' in mod:
                 # github download id
                 # name/repo
-                print('github releases are NOT YET IMPLEMENTED')
-                print('ignoring: {}'.format(mod['github']))
-                pass
+                github_parameter = None
                 github = mod['github']
                 if isinstance(mod['github'], dict):
                     github_parameter = mod['github']
                 elif isinstance(mod['github'], str):
-                    repo_branch = mod['github'].split('/', 1)
-                    if len(repo_branch) == 2:
-                        repo = repo_branch[0]
-                        branch = repo_branch[1]
-                        github = {'repo': repo, 'branch': branch}
-                continue
+                    user_repo = mod['github'].split('/', 1)
+                    if len(user_repo) == 2:
+                        user = user_repo[0]
+                        repo = user_repo[1]
+                        github_parameter = {'user': user, 'repo': repo}
+                        if 'tag' in mod:
+                            github_parameter['tag'] = mod['tag']
+                if github_parameter:
+                    download_parameter['type'] = 'github'
+                    download_parameter['github'] = github_parameter
 
             elif 'jenkins' in mod:
                 # name/job
@@ -88,8 +87,8 @@ for packConfigFile in config["modpacks"]:
                     if 'url' not in jenkins:
                         print('no jenkins url')
                         continue
-                    if 'name' not in jenkins and 'job' not in jenkins:
-                        print('no job or name provided')
+                    if 'name' not in jenkins:
+                        print('no name (job) provided')
                         continue
 
                     download_parameter['type'] = 'jenkins'

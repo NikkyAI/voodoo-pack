@@ -9,10 +9,11 @@ import requests
 import shutil
 import bz2
 import rfc6266
+import sys
 import yaml
 from html import escape as html_escape
 from lxml import html
-
+from requests.auth import HTTPBasicAuth
 
 from .types import RLType, DependencyType
 
@@ -22,8 +23,10 @@ complete_timestamp_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v1
 parser = argparse.ArgumentParser(description="Download mods from curseforge and other sources")
 parser.add_argument("--auth", help="auth file for curse login")
 parser.add_argument("--config", help="path to config file")
-parser.add_argument("--username", help="curse login")
-parser.add_argument("--password", help="curse password")
+parser.add_argument("--username_curse", help="curse login")
+parser.add_argument("--password_curse", help="curse password")
+parser.add_argument("--username_github", help="github login")
+parser.add_argument("--password_github", help="github password")
 parser.add_argument("--debug", dest="debug", action="store_true", help="display debug info")
 args, unknown = parser.parse_known_args()
 
@@ -46,20 +49,42 @@ if args.debug:
 auth_file = args.auth or config.get('authentication', None)
 
 auth = None
-if args.username and args.password:
-    auth = {'username': args.username, 'password': args.password}
-
-
+auth_curse = None
+if not auth:
+    if auth_file:
+        auth_path = Path(configPath.parent / auth_file)
+        auth_suffix = auth_path.suffix
+        if auth_suffix == '.json':
+            auth = json.loads(auth_path.open().read())
+        elif auth_suffix == '.yaml':
+            auth = yaml.load(auth_path.open().read())
+if args.username_curse and args.password_curse:
+    auth_curse = {'username': args.username, 'password': args.password}
+    auth['curse'] = auth_curse
+if args.username_github and args.password_github:
+    auth_github = {'username': args.username, 'password': args.password}
+    auth['github'] = auth_github
+    
+    
 outputDir = Path(config.get('output', 'modpacks'))
 if not outputDir.exists():
-    outputDir.mkdir(parents=True, exist_ok=True)
+    outputDir.mkdir(parents=True)
 downloadUrls = config.get('urls', False)
 
 downloaderDirs = appdirs.AppDirs(appname="cfpecker", appauthor="nikky")
-cache_path = Path(downloaderDirs.user_cache_dir, "packCache")
-if not cache_path.exists():
-    cache_path.mkdir(parents=True)
-print('cache_path: {}'.format(cache_path))
+cache_path_curse = Path(downloaderDirs.user_cache_dir, "curse")
+cache_path_github = Path(downloaderDirs.user_cache_dir, "github")
+cache_path_jenkins = Path(downloaderDirs.user_cache_dir, "jenkins")
+cache_path_general = Path(downloaderDirs.user_cache_dir)
+if not cache_path_curse.exists():
+    cache_path_curse.mkdir(parents=True)
+if not cache_path_github.exists():
+    cache_path_github.mkdir(parents=True)
+if not cache_path_jenkins.exists():
+    cache_path_jenkins.mkdir(parents=True)
+if not cache_path_general.exists():
+    cache_path_general.mkdir(parents=True)
+print('cache_path: {}'.format(cache_path_curse))
 
 
 ProjectData = None
@@ -71,8 +96,8 @@ side_map = {
 
 def get_project_data() -> List[Mapping[str, Any]]:
     
-    timestamp_path = Path(cache_path / "timestamp.txt")
-    json_path = Path(cache_path / "complete.json")
+    timestamp_path = Path(cache_path_general / "complete.json.txt")
+    json_path = Path(cache_path_general / "complete.json")
     no_download = False
     if timestamp_path.is_file():
         print('downloading timestamp')
@@ -239,7 +264,7 @@ def download(minecraft_path: Path,
             direct_parameter = {key: download_entry[key] for key in ["direct"] if key in download_entry}
             file, name = download_direct(mods_path=effective_path, **direct_parameter)
 
-        if download_type == 'curse':
+        elif download_type == 'curse':
             curse_parameter = {key: download_entry[key] for key in ['project_id', 'file_id', 'optional']
                 if key in download_entry}
             optional = download_entry.get('optional', curse_optional)
@@ -247,10 +272,11 @@ def download(minecraft_path: Path,
 
             file, name = download_curse(mods_path=effective_path, download_list=download_list, download_optional=optional, **curse_parameter)
 
-        if download_type == 'github':
-            continue
+        elif download_type == 'github':
+            github_parameter = download_entry['github']
+            file, name = download_github(mods_path=effective_path, **github_parameter)
 
-        if download_type == 'jenkins':
+        elif download_type == 'jenkins':
             jenkins_parameter = download_entry['jenkins']
             file, name = download_jenkins(mods_path=effective_path, **jenkins_parameter)
 
@@ -264,6 +290,104 @@ def download(minecraft_path: Path,
                     json.dump(info_dict, info_file)
 
 
+
+session_github = None
+
+def initialize_github():
+    global session_github
+    session_github = requests.session()
+    github_auth = auth.get('github', None)
+    if github_auth and 'username' in github_auth and 'password' in github_auth:
+        session_github.auth = HTTPBasicAuth(github_auth['username'], github_auth['password'])
+
+
+def download_github(mods_path: Path, user: str, repo: str=None, tag:str=None) -> (Path, str):
+    global iLen, i, session_github
+    
+    if not session_github:
+        initialize_github()
+    
+    if tag:
+        api_url = urljoin('https://api.github.com', 'repos/{user}/{repo}/releases/tags/{tag}'.format(**locals()))
+    else:
+        api_url = urljoin('https://api.github.com', 'repos/{user}/{repo}/releases'.format(**locals()))
+
+    if args.debug:
+        print('GET {}'.format(api_url))
+    r = session_github.get(api_url)
+    r.raise_for_status()
+    if r.status_code == 200:
+        data = r.json()
+        if isinstance(data, list):
+            data.sort(key=lambda x: (x['created_at']), reverse=True)
+            data = data[0] # TODO pick first or specific tag name
+        assets = data['assets']
+        file_name = None
+        asset_url = None
+        tag = data['tag_name']
+        dep_cache_dir = cache_path_github / user / repo / tag
+        for asset in assets:
+            file_name = asset['name']
+            asset_url = asset['url']
+            if file_name.endswith('sources.jar') or file_name.endswith('api.jar') or file_name.endswith('deobf.jar'):
+                continue
+            asset_url = asset['url']
+            break
+
+        if asset_url:
+
+            if downloadUrls:
+                url_file_name = "{}.url.txt".format(file_name)
+                print("[{}/{}] {}".format(i, iLen, url_file_name))
+                with open(str(mods_path / url_file_name), "wb") as urlFile:
+                    urlFile.write(str.encode(asset_url))
+
+            # look for files in cache
+            ETag = None
+            dep_file = dep_cache_dir / file_name
+            etag_file = dep_cache_dir / (file_name + '.etag')
+            if dep_file.exists() and etag_file.exists():
+                # File might be cached
+                etag = etag_file.open().read()
+
+            headers = {}
+            if ETag:
+                headers['if-none-match'] = ETag
+            file_response = session_github.get(asset_url, stream=True, headers=headers)
+            file_response.raise_for_status()
+            response_etag = file_response.headers['ETag']
+            if file_response.status_code == requests.codes.not_modified:
+                # Correct file is cached
+                target_file = mods_path / dep_file.name
+
+                i += 1
+                print("[{}/{}] {} (cached)".format(i, iLen, target_file.name))
+                shutil.copyfile(str(dep_file), str(target_file))
+
+                with open(str(dep_cache_dir / (file_name + '.etag')), "wb") as mod:
+                    mod.write(str.encode(response_etag))
+
+                return target_file, repo
+
+            i += 1
+            print("[{}/{}] {}/{} -> {}".format(i, iLen, user, repo, file_name))
+
+            # write jarfile
+            path = mods_path / file_name
+            with open(str(path), "wb") as mod:
+                mod.write(file_response.content)
+
+            # Try to add file to cache.
+            if not dep_cache_dir.exists():
+                dep_cache_dir.mkdir(parents=True)
+            with open(str(dep_cache_dir / file_name), "wb") as mod:
+                mod.write(file_response.content)
+            with open(str(dep_cache_dir / (file_name + '.etag')), "wb") as mod:
+                mod.write(str.encode(response_etag))
+
+            return path, repo
+
+
 def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master', build_type: str='lastStableBuild') -> (Path, str):
     global iLen, i, session
     _url = urlparse(url)
@@ -272,13 +396,14 @@ def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master',
     branch_quote = quote(branch, safe='')
     branch_quote = quote(branch_quote, safe='')
     api_url = urljoin(url, 'job/{name}/branch/{branch_quote}/{build_type}/api/json'.format(**locals()))
-    r = requests.get(api_url)
+    r = session.get(api_url)
     r.raise_for_status()
     if r.status_code == 200:
         data = r.json()
         artifacts = data['artifacts']
         file_name = None
         artifact_url = None
+        dep_cache_dir = cache_path_jenkins / name / branch
         for artifact in artifacts:
             file_name = artifact['fileName']
             relative_path = artifact['relativePath']
@@ -287,12 +412,40 @@ def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master',
             artifact_url = urljoin(url, 'job/{name}/branch/{branch_quote}/{build_type}/artifact/{relative_path}'.format(**locals()))
             break
         if artifact_url:
+
+            if downloadUrls:
+                url_file_name = "{}.url.txt".format(file_name)
+                print("[{}/{}] {}".format(i, iLen, url_file_name))
+                with open(str(mods_path / url_file_name), "wb") as urlFile:
+                    urlFile.write(str.encode(artifact_url))
+
+            # look for files in cache
+            last_modified = None
+            dep_file = dep_cache_dir / file_name
+            etag_file = dep_cache_dir / (file_name + '.last-modified')
+            if dep_file.exists() and etag_file.exists():
+                # File might be cached
+                etag = etag_file.open().read()
+
+            print(last_modified)
+            # headers = {}
+            # if last_modified:
+            #     headers['if-modified-since'] = last_modified
+
             # matching artifact
-            # TODO dependency cache
-            file_response = session.get(artifact_url, stream=True)
-            while file_response.is_redirect:
-                source = file_response
-                file_response = session.get(source, stream=True)
+            file_response = session.get(artifact_url, stream=True, headers={'if-modified-since': last_modified})
+            file_response.raise_for_status()
+
+            response_last_modified = file_response.headers.get('Last-Modified', None)
+            if file_response.status_code == requests.codes.not_modified:
+                # Correct file is cached
+                target_file = mods_path / dep_file.name
+
+                i += 1
+                print("[{}/{}] {} (cached)".format(i, iLen, target_file.name))
+                shutil.copyfile(str(dep_file), str(target_file))
+
+                return target_file, name
 
             i += 1
             print("[{}/{}] {} -> {}".format(i, iLen, artifact_url, file_name))
@@ -301,13 +454,24 @@ def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master',
             path = mods_path / file_name
             with open(str(path), "wb") as mod:
                 mod.write(file_response.content)
-    return None, ''
+
+
+            if not dep_cache_dir.exists():
+                dep_cache_dir.mkdir(parents=True)
+            with open(str(dep_cache_dir / file_name), "wb") as mod:
+                mod.write(file_response.content)
+            if response_last_modified:
+                with open(str(dep_cache_dir / (file_name + '.last-modified')), "wb") as mod:
+                    mod.write(str.encode(response_last_modified))
+
+            return path, name
+    return None, name
 
 
 def download_curse(mods_path: Path, project_id: int, file_id: int, download_optional: bool = False, download_list: List[Dict[str, Any]]=list(())) -> (Path, str):
     global iLen, i, session
 
-    dep_cache_dir = cache_path / str(project_id) / str(file_id)
+    dep_cache_dir = cache_path_curse / str(project_id) / str(file_id)
     addon = get_add_on(project_id)
     file = get_add_on_file(project_id, file_id)
     for dependency in file['dependencies']:
@@ -347,7 +511,6 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
             print("[{0:d}/{1:d}] {2:s} (cached)".format(i, iLen, target_file.name))
             shutil.copyfile(str(dep_files[0]), str(target_file))
 
-            # TODO add caching
             return target_file, addon['name']
 
     # File is not cached and needs to be downloaded
@@ -414,26 +577,17 @@ def download_direct(mods_path: Path, direct: str) -> (Path, str):
 
     return path, file_name
 
-
-authorization = False
-
+auth_session = None
 
 def authenticate():
-    global auth, auth_file
-    if not auth:
-        if auth_file:
-            auth_path = Path(configPath.parent / auth_file)
-            auth_suffix = auth_path.suffix
-            if auth_suffix == '.json':
-                auth = json.loads(auth_path.open().read())
-            elif auth_suffix == '.yaml':
-                auth = yaml.load(auth_path.open().read())
-        else:
-            raise NameError('no_curse_authentication')
+    global auth, auth_file, auth_session
+    auth_curse = auth.get('curse', None)
+    if 'curse' not in auth:
+        raise NameError('no_curse_authentication')
     if args.debug:
         print('post https://curse-rest-proxy.azurewebsites.net/api/authenticate')
     r = requests.post('https://curse-rest-proxy.azurewebsites.net/api/authenticate',
-                      json=auth)
+                      json=auth_curse)
     r.raise_for_status()
     if r.status_code == 400:
         message = r.json()["message"]
@@ -444,23 +598,24 @@ def authenticate():
         session = response_data["session"]
         global authorization
         authorization = 'Token {0[user_id]}:{0[token]}'.format(session)
-
+        global auth_session
+        auth_session = requests.session()
+        auth_session.headers.update({'Authorization': 'Token {0[user_id]}:{0[token]}'.format(session)})
 
 def get_add_on(project_id: int) -> Dict[str, Any]:
-    global fileCache
+    global fileCache, auth_session
     project_files = fileCache.get(project_id, None)
     if not project_files:
         fileCache[project_id] = {}
         project_files = fileCache.get(project_id, None)
-    if not authorization:
+    if not auth_session:
         authenticate()
     if args.debug:
         print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}'
           .format(project_id))
-    r = requests.get(
+    r = auth_session.get(
         'https://curse-rest-proxy.azurewebsites.net/api/addon/{0}'
-        .format(project_id),
-        headers={'Authorization': authorization}
+        .format(project_id)
     )
     r.raise_for_status()
     if r.status_code == 200:
@@ -473,18 +628,18 @@ fileCache = {}
 
 
 def get_add_on_files(project_id: int) -> List[Dict[str, Any]]:
-    global fileCache
+    global fileCache, auth_session
     project_files = fileCache.get(project_id, None)
     if not project_files:
         fileCache[project_id] = {}
         project_files = fileCache.get(project_id, None)
-    if not authorization:
+    if not auth_session:
         authenticate()
     if args.debug:
         print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/files'.format(project_id))
-    r = requests.get(
+    r = auth_session.get(
         'https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/files'
-        .format(project_id), headers={'Authorization': authorization}
+        .format(project_id)
     )
     r.raise_for_status()
     if r.status_code == 200:
@@ -496,7 +651,7 @@ def get_add_on_files(project_id: int) -> List[Dict[str, Any]]:
 
 
 def get_add_on_file(project_id: int, file_id: int) -> Dict[str, Any]:
-    global fileCache
+    global fileCache, auth_session
     project_files = fileCache.get(project_id, None)
     if project_files:
         file = project_files.get(file_id, None)
@@ -506,14 +661,13 @@ def get_add_on_file(project_id: int, file_id: int) -> Dict[str, Any]:
         fileCache[project_id] = {}
         project_files = fileCache.get(project_id, None)
 
-    if not authorization:
+    if not auth_session:
         authenticate()
     if args.debug:
         print('get https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/file/{1}'.format(project_id, file_id))
-    r = requests.get(
+    r = auth_session.get(
         'https://curse-rest-proxy.azurewebsites.net/api/addon/{0}/file/{1}'
-        .format(project_id, file_id),
-        headers={'Authorization': authorization}
+        .format(project_id, file_id)
     )
     r.raise_for_status()
     if r.status_code == 200:

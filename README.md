@@ -6,16 +6,18 @@ with minimal configuration
 ## Features
 
 downloads mods from
-- curse
-- jenkins
-- github (not yet implemented)
-- direct (urls)
+- `curse`forge
+- `jenkins`
+- `github` releases
+- `direct` urls
 
 downloads dependencies for curse mods
 
 supports clientside / serverside mods
 
 supports optional mods
+
+caches downloaded mods to avoid redownloading for `curse`, `jenkins` and `github`
 
 ## setup and execution
 
@@ -38,17 +40,13 @@ urls: true
 
 - `authetication`: str   
   path to a file containing username and password   
-  example:   
-    ```yaml
-    auth.yaml
-    ---
-    username: login@email.tld
-    password: password
-    ```
+  for `curse` and `github`   
+  you can set username and password though commandline flags though and have no password saved in plaintext
+  example: [auth.yaml](config/auth.yaml)   
   - optional
   - default: none
 - `output`: str   
-  path tothe output folder for modpacks
+  path to the output folder for modpacks
   - optional
   - default: `modpacks/`
 - `modpacks`: List[str]   
@@ -64,9 +62,9 @@ example:
 `config/%modpack%.yaml`
 
 ```yaml
-output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
+output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/" #realtive or abslute path
 mcversion: 1.10.2
-optionals: true
+optionals: true # refers to curseforge optional dependencies
 release_type:
 - Release
 - Beta
@@ -85,10 +83,10 @@ mods:
     description: this is the wrong version, but Wearablebackpacks is not done yet
     recommendation: none # | starred | avoid
     selected: false
-- github: copygirl/BetterStorage # NYI
+- github: copygirl/BetterStorage
 - 228756
 - curse: Chisel
-  side: both # goes into mods/
+  side: both # goes into mods/ also the default anyway
 - direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
   side: client # goes into mods/_CLIENT
 - Extra Utilities
@@ -141,8 +139,8 @@ example entries
 
 a entry can be
 
-- int (see [short formss id](#id))
-- string (see [short forms name](#name)
+- int (see short forms [id](#id))
+- string (see short forms [name](#name) and [user/repo](#userrepo))
 - dict
 
 ##### short forms
@@ -154,6 +152,16 @@ a entry can be
 ###### name
 `- Extra Utilities` –> `- name: Extra Utilities`   
 `- curse: Extra Utilities` –> `- name: Extra Utilities`
+
+###### user/repo
+```yaml
+- github: copygirl/WearableBackpacks
+``` -> 
+```yaml
+- github
+    user: copygirl
+    repo: WearableBackpacks
+```
 
 ###### dict
 if the entry does not contain one of the type keys `curse`, `github`, `jenkins`, `direct`
@@ -231,7 +239,24 @@ keys:
       
 
 ###### github 
-(NYI)      
+example:
+```yaml
+- github: copygirl/WearableBackpacks
+- github: copygirl/BetterStorage
+    tag: v0.13.1.127
+- github:
+    user: copygirl
+    repo: BetterStorage
+    tag: v0.13.1.127
+```
+
+keys: 
+- `github`: dict
+    - `user`: str
+    - `repo`: str
+    - `tag`: str
+      - optional
+      - default: `ǹone` 
 
 
 ###### direct

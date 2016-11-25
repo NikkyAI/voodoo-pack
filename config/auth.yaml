@@ -1,3 +1,9 @@
 ---
-username: email/username
-password: password
+curse:
+  username: email/username
+  password: password
+#github authentication is optional but raises the available api requests,
+#very useful for testing
+github:
+  username: email/username
+  password: password

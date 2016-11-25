@@ -7,6 +7,8 @@ release_type:
 - Beta
 - Alpha
 mods:
+- github: copygirl/WearableBackpacks
+  tag: v1.1.0.2-beta
 - jenkins:
     url: http://ci.tterrag.com/
     name: Chisel
@@ -24,7 +26,6 @@ mods:
     description: this is the wrong version, but Wearablebackpacks is not done yet
     recommendation: none # | starred | avoid
     selected: false
-- github: copygirl/BetterStorage # NYI
 - 228756 #curse: project_id: 228756
 - curse: Chisel # curse: name: Chisel
   side: both # goes into mods/
