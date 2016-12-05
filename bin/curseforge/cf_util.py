@@ -69,7 +69,8 @@ if args.username_github and args.password_github:
 outputDir = Path(config.get('output', 'modpacks'))
 if not outputDir.exists():
     outputDir.mkdir(parents=True)
-downloadUrls = config.get('urls', False)
+downloadUrlsConfig = config.get('urls', False)
+downloadUrls = False
 
 downloaderDirs = appdirs.AppDirs(appname="cfpecker", appauthor="nikky")
 cache_path_curse = Path(downloaderDirs.user_cache_dir, "curse")
@@ -226,8 +227,12 @@ session = None
 
 def download(minecraft_path: Path,
              download_list: List[Dict[str, Any]]=(),
-             curse_optional: bool=False
+             curse_optional: bool=False,
+             direct_urls: bool=True
              ):
+    global downloadUrls
+    downloadUrls = direct_urls and downloadUrlsConfig
+
     # minecraft_path = Path(minecraft_folder)
     if not minecraft_path.exists():
         print('mkdir {}'.format(minecraft_path))

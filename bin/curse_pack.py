@@ -31,6 +31,7 @@ for packConfigFile in config["modpacks"]:
     default_release_types = packConfig.get('release_type', (RLType.Release, RLType.Beta, RLType.Alpha))
     mods = packConfig.get("mods", [])
     download_optional = packConfig.get("optionals", False)
+    direct_urls_bool = packConfig.get("urls", True)
     curse_ids = []
     direct_urls = []
     downloads = []
@@ -137,5 +138,5 @@ for packConfigFile in config["modpacks"]:
             print('error with: {}'.format(mod))
             print(type(mod))
 
-    download(modpackFolder, download_list=downloads, curse_optional=download_optional)
+    download(modpackFolder, download_list=downloads, curse_optional=download_optional, direct_urls=direct_urls_bool)
     # download(modpackFolder, curse_id_list=curse_ids, direct_url_list=direct_urls, curse_optional=download_optional)

@@ -1,0 +1,14 @@
+---
+# output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
+mc_version: 1.10.2
+optionals: true
+urls: false
+release_type:
+- Release
+- Beta
+- Alpha
+mods:
+- JourneyMap
+- direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
+  #side: client
+- Just Enough Items (JEI)
