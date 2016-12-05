@@ -12,7 +12,7 @@ import rfc6266
 import sys
 import yaml
 from html import escape as html_escape
-from lxml import html
+#from lxml import html
 from requests.auth import HTTPBasicAuth
 
 from .types import RLType, DependencyType
@@ -544,15 +544,15 @@ def download_direct(mods_path: Path, direct: str) -> (Path, str):
     while file_response.is_redirect:
         source = file_response
         file_response = session.get(source, stream=True)
-    if 'JSESSIONID' in file_response.cookies:
-        # special case just for http://optifine.net
-        parsed_uri = urlparse(file_response.url)
-        tree = html.fromstring(file_response.content)
-        resource = tree.xpath('//*[@id="Download"]/a/@href')[0]
-        link = '{uri.scheme}://{uri.netloc}/{res}' \
-            .format(uri=parsed_uri, res=resource)
-        file_response = session.get(link, stream=True)
-        disable_url = True
+    # if 'JSESSIONID' in file_response.cookies:
+    #     # special case just for http://optifine.net
+    #     parsed_uri = urlparse(file_response.url)
+    #     tree = html.fromstring(file_response.content)
+    #     resource = tree.xpath('//*[@id="Download"]/a/@href')[0]
+    #     link = '{uri.scheme}://{uri.netloc}/{res}' \
+    #         .format(uri=parsed_uri, res=resource)
+    #     file_response = session.get(link, stream=True)
+    #     disable_url = True
     content_disposition = file_response.headers.get('Content-Disposition', False)
     if content_disposition:
         file_name = rfc6266.parse_headers(content_disposition).filename_unsafe
