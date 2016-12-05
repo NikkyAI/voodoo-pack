@@ -38,10 +38,10 @@ modpacks:
 urls: true
 ```
 
-- `authetication`: str   
+- `authentication`: str   
   path to a file containing username and password   
   for `curse` and `github`   
-  you can set username and password though commandline flags though and have no password saved in plaintext
+  you can set username and password through commandline flags though and have no passwords saved in plaintext
   example: [auth.yaml](config/auth.yaml)   
   - optional
   - default: none

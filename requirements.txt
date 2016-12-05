@@ -1,0 +1,7 @@
+appdirs
+requests
+pyaml
+rfc6266
+lepl
+lxml
+pyhocon
