@@ -1,1 +1,1 @@
-C:\Python35\python.exe -m pip install -U -r requirements.txt
+py -3 -m pip install -U -r requirements.txt

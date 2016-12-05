@@ -1,1 +1,2 @@
-C:\Python35\python.exe bin\curse_pack.py
+cd %~dp0
+py -3 bin\curse_pack.py
