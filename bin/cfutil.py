@@ -14,8 +14,7 @@ import yaml
 from html import escape as html_escape
 #from lxml import html
 from requests.auth import HTTPBasicAuth
-
-from .types import RLType, DependencyType
+from cftypes import RLType, DependencyType
 
 complete_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2"
 complete_timestamp_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2.txt"

@@ -1,14 +1,12 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
-import argparse
 import codecs
 import os
 import sys
 
 print('using encoding {}'.format(sys.stdout.encoding))
 
-from curseforge.cf_util import *
-import yaml
+from cfutil import *
 
 ProjectData = get_project_data()
 print("data len: {}".format(len(ProjectData) / (1024.0 * 1024.0)))
