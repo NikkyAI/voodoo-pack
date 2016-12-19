@@ -13,6 +13,7 @@ import sys
 import yaml
 from html import escape as html_escape
 #from lxml import html
+import bs4 as BeautifulSoup
 from requests.auth import HTTPBasicAuth
 from cftypes import RLType, DependencyType
 
@@ -269,11 +270,8 @@ def download(minecraft_path: Path,
             file, name = download_direct(mods_path=effective_path, **direct_parameter)
 
         elif download_type == 'curse':
-            curse_parameter = {key: download_entry[key] for key in ['project_id', 'file_id', 'optional']
-                if key in download_entry}
+            curse_parameter = download_entry['curse']
             optional = download_entry.get('optional', curse_optional)
-            # optional = download_entry['optional'] if ('optional' in download_entry and download_entry['optional'] is not None) else curse_optional
-
             file, name = download_curse(mods_path=effective_path, download_list=download_list, download_optional=optional, **curse_parameter)
 
         elif download_type == 'github':
@@ -483,7 +481,7 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
         add_on_id = dependency['add_on_id']
         #for download in download_list:
             #print(get_add_on(download['project_id']))
-        if add_on_id in [download['project_id'] for download in download_list if download['type'] == 'curse' and 'project_id' in download]:
+        if add_on_id in [download['curse']['project_id'] for download in download_list if download['type'] == 'curse' and 'curse' in download]:
             # dependency project is already in the download list
             continue
 
@@ -492,7 +490,7 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
                 (dep_type == DependencyType.Optional and (download_optional)):
             project_id, file_id, file_name = find_curse_file(project_id=add_on_id)
             if project_id > 0 and file_id > 0:
-                download_list.append({'project_id': project_id, 'file_id': file_id, 'type': 'curse'})
+                download_list.append({'curse': {'project_id': project_id, 'file_id': file_id}, 'type': 'curse'})
                 iLen += 1  # hope this is about righttio
                 print(
                     'added {} dependency {} \nof {} at {}'.format(dep_type, file_name, addon['name'], iLen))
@@ -548,22 +546,29 @@ def download_direct(mods_path: Path, direct: str) -> (Path, str):
     while file_response.is_redirect:
         source = file_response
         file_response = session.get(source, stream=True)
-    # if 'JSESSIONID' in file_response.cookies:
-    #     # special case just for http://optifine.net
-    #     parsed_uri = urlparse(file_response.url)
-    #     tree = html.fromstring(file_response.content)
-    #     resource = tree.xpath('//*[@id="Download"]/a/@href')[0]
-    #     link = '{uri.scheme}://{uri.netloc}/{res}' \
-    #         .format(uri=parsed_uri, res=resource)
-    #     file_response = session.get(link, stream=True)
-    #     disable_url = True
+    if 'JSESSIONID' in file_response.cookies:
+        # special case just for http://optifine.net
+        parsed_uri = urlparse(file_response.url)
+        soup = BeautifulSoup.BeautifulSoup(file_response.content)
+        soup.prettify()
+        span = soup.find('span', {'id': 'Download'})
+        if span:
+            resource = span.a['href']
+            link = '{uri.scheme}://{uri.netloc}/{res}'.format(uri=parsed_uri, res=resource)
+            file_response = session.get(link, stream=True)
+            disable_url = True
+        else:
+            print('no result')
+
     content_disposition = file_response.headers.get('Content-Disposition', False)
     if content_disposition:
         file_name = rfc6266.parse_headers(content_disposition).filename_unsafe
     else:
-        print('cannot find Content-Disposition header, are you sure this download link is valid?')
+        file_name = file_response.url.rsplit('/', 1)[-1]
+
+    # print('cannot find Content-Disposition header, are you sure this download link is valid?')
         # TODO find filename through alternative methods
-        return None, ''
+        #return None, ''
 
     i += 1
     print("[{}/{}] {}".format(i, iLen, file_name))

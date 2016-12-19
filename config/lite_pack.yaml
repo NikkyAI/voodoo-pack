@@ -1,14 +1,129 @@
 ---
-# output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
+output: "../../minecraft/modpackcreator/modpacks/lite_pack/src/"
 mc_version: 1.10.2
 optionals: true
-urls: false
+urls: true
 release_type:
 - Release
 - Beta
 - Alpha
 mods:
-- JourneyMap
-- direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
-  #side: client
-- Just Enough Items (JEI)
+- curse: Quark
+
+- curse: Neat
+  side: client
+  feature:
+    description: shows mobs and player health
+    recommendation: starred
+    selected: true
+
+- direct: http://asie.pl/foamfix/foamfix-0.4.0a-anarchy.jar
+  side: both
+  feature:
+    description: Anarchy Edition http://asie.pl/foamfix/
+    recommendation: starred
+    selected: true
+
+- direct: http://asie.pl/foamfix/foamfix-0.4.0a-law.jar
+  side: client
+  feature:
+    description: LawFul Edition http://asie.pl/foamfix/
+    recommendation: starred
+    selected: false
+
+- curse: JourneyMap
+  side: client
+  feature:
+    description: adds a minimap and allows to open yur map in a browser
+    #recommendation:  # | avoid
+    selected: true
+
+- curse: Mapwriter 2
+  side: client
+  feature:
+    description: saves the map and adds a minimap
+    #recommendation:  # | avoid
+    selected: false
+
+# # also required on both sides, what a letdown
+#- curse: ReCubed
+#  side: both
+#  feature:
+#    description: statistics if you want to see them...
+#    #recommendation: avoid
+#    selected: false
+
+- curse: Schematica
+  side: client
+  feature:
+    description: allows to save and load schemtics in the world as ghost blocks, its a great building guide
+    selected: false
+
+- curse: mineTunes
+  side: client
+  feature:
+    description: In-game .mp3 music player complete with playlists and an interface display
+    selected: false
+
+- curse: Ambience (Music Mod)
+  side: client
+  feature:
+    description: Environmentally Aware soundtracks in Minecraft
+    selected: false
+
+  curse: Picture-in-Picture (PiP)
+  side: client
+  feature:
+    description: Renders other player’s Point of Views in a “Picture-in-Picture” style on the Minecraft screen when no GUI is open.
+    selected: false
+
+- direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D4.jar
+  side: client
+  feature:
+    description: optifine, for improving your visual quality, can create issues with other mods
+    recommendation: avoid
+    selected: false
+
+- direct: http://www.karyonix.net/shadersmod/files/ShadersMod-v2.5.3mc1.10.2.jar
+  side: client
+  feature:
+    description: shaders make look things fancy, only install if you know what it does
+    recommendation: avoid
+    selected: false
+
+- curse:
+    name: 'SAO UI'
+    mc_version: '1.10'
+  side: client
+  feature:
+    description: fancy UI overhaul, will probably not work very well
+    recommendation: avoid
+    selected: false
+
+# not working unless installed on both sides
+- curse: The One Probe
+
+- curse: ChatFlow
+  side: client
+
+- curse: Just Enough Items (JEI)
+  side: client
+
+- curse: Just Enough Resources (JER)
+  side: client
+
+- curse: Inventory Tweaks
+  side: client
+
+- curse: Morpheus
+  side: server
+
+- curse: Death Counter
+  side: server
+
+- curse: Realistic Terrain Generation
+  optional: false
+  side: server
+
+- curse: Climate Control
+  side: server

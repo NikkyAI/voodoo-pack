@@ -1,5 +1,5 @@
 ---
-# output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
+output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/"
 mc_version: 1.10.2
 optionals: true
 release_type:
@@ -24,7 +24,7 @@ mods:
   feature:
    # https://github.com/SKCraft/Launcher/wiki/Optional-Features#via-infojson-files
     description: this is the wrong version, but Wearablebackpacks is not done yet
-    recommendation: none # | starred | avoid
+    recommendation: starred # | avoid
     selected: false
 - 228756 #curse: project_id: 228756
 - curse: Chisel # curse: name: Chisel

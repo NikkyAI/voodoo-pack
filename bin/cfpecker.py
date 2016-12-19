@@ -109,9 +109,13 @@ for packConfigFile in config["modpacks"]:
             else:
                 curse_parameter = {
                     key: mod[key] for key
-                    in ["name", "mc_version", "version", "release_type", "project_id", 'optional']
+                    in ['name', 'mc_version', 'version', 'release_type', 'optional']
                     if key in mod
                     }
+                print('curse\t{}'.format(curse_parameter))
+
+            if 'optional' in mod:
+                download_parameter['optional'] = mod['optional']
 
         else:
             print('unknown: {}'.format(mod))
@@ -120,8 +124,7 @@ for packConfigFile in config["modpacks"]:
             project_id, file_id, file_name = find_curse_file(**curse_parameter)
             if project_id > 0 and file_id > 0:
                 curse_ids.append((project_id, file_id))
-                download_parameter['project_id'] = project_id
-                download_parameter['file_id'] = file_id
+                download_parameter['curse'] = {'project_id': project_id, 'file_id': file_id}
                 download_parameter['type'] = 'curse'
             else:
                 print("cannot find:")
@@ -137,4 +140,3 @@ for packConfigFile in config["modpacks"]:
             print(type(mod))
 
     download(modpackFolder, download_list=downloads, curse_optional=download_optional, direct_urls=direct_urls_bool)
-    # download(modpackFolder, curse_id_list=curse_ids, direct_url_list=direct_urls, curse_optional=download_optional)
