@@ -19,9 +19,9 @@ for packConfigFile in config["modpacks"]:
     packConfigPath = Path(configPath.parent / packConfigFile)
     suffix = packConfigPath.suffix
     if suffix == '.json':
-        packConfig = json.loads(packConfigPath.open().read())
+        packConfig = json.loads(packConfigPath.open(encoding='utf-8').read())
     elif suffix == '.yaml':
-        packConfig = yaml.load(packConfigPath.open().read())
+        packConfig = yaml.load(packConfigPath.open(encoding='utf-8').read())
     modpackDir = packConfig.get("output", outputDir / os.path.splitext(packConfigFile)[0])
     modpackFolder = Path(modpackDir)
     print('modpack output {}'.format(modpackFolder))

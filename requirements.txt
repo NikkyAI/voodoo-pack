@@ -3,5 +3,4 @@ requests
 pyaml
 rfc6266
 lepl
-pyhocon
 beautifulsoup4

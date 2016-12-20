@@ -316,3 +316,11 @@ keys:
       - `false`
 
 see [SKCraft/Launcher/wiki/Optional-Features#via-infojson-files](https://github.com/SKCraft/Launcher/wiki/Optional-Features#via-infojson-files)
+
+## make a onefile executable
+
+run `make.bat` or `make.sh`
+make sure that %appdata%\..\Local\Programs\Python\Python35\Scripts
+is in your path
+
+find the executable in `dist/cfpecker.exe`

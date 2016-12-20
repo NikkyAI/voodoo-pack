@@ -1,2 +1,2 @@
 cd %~dp0
-py -3 bin\curse_pack.py
+py -3 bin\cfpecker.py
