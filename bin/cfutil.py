@@ -183,10 +183,10 @@ def find_curse_file(mc_version: str=defaultGameVersion,
                         and RLType.get(f['ReleaseType'])
                         in release_type]
         if latest_files:
-            # sort by date
-            latest_files.sort(key=lambda x: (x['FileDate']))
             # sort by release type so that alpha, beta, release ordering is achieved
             latest_files.sort(key=lambda x: (x['ReleaseType']), reverse=True)
+            # sort by date
+            latest_files.sort(key=lambda x: (x['FileDate']), reverse=True)
             file = latest_files[0]
             return project_id, file["Id"], file['FileName']
 
