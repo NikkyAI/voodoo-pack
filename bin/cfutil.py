@@ -14,6 +14,8 @@ import yaml
 from html import escape as html_escape
 #from lxml import html
 import bs4 as BeautifulSoup
+from pyhocon import ConfigFactory
+from pyhocon import HOCONConverter
 from requests.auth import HTTPBasicAuth
 from cftypes import RLType, DependencyType
 
@@ -31,7 +33,7 @@ parser.add_argument("--debug", dest="debug", action="store_true", help="display 
 args, unknown = parser.parse_known_args()
 
 
-configPath = Path("config/config.yaml")
+configPath = Path("config/config.conf")
 if args.config:
     configPath = Path(args.config)
 # config = yaml.load(configPath.open().read())
@@ -41,31 +43,36 @@ if config_suffix == '.json':
     config = json.loads(configPath.open().read())
 elif config_suffix == '.yaml':
     config = yaml.load(configPath.open().read())
+    print(HOCONConverter.to_hocon(ConfigFactory.from_dict(config)))
+elif config_suffix == '.conf':
+    config = ConfigFactory.parse_file(str(configPath))
 if args.debug:
     print(configPath.name)
     print('---')
-    print(yaml.dump(config))
+    #print(yaml.dump(config))
+    print(HOCONConverter.to_hocon(config))
+    print('\n')
 
 auth_file = args.auth or config.get('authentication', None)
 
-auth = None
+auth = config['authentication']
 auth_curse = None
-if not auth:
-    if auth_file:
-        auth_path = Path(configPath.parent / auth_file)
-        auth_suffix = auth_path.suffix
-        if auth_suffix == '.json':
-            auth = json.loads(auth_path.open().read())
-        elif auth_suffix == '.yaml':
-            auth = yaml.load(auth_path.open().read())
+# if not auth:
+#     if auth_file:
+#         auth_path = Path(configPath.parent / auth_file)
+#         auth_suffix = auth_path.suffix
+#         if auth_suffix == '.json':
+#             auth = json.loads(auth_path.open().read())
+#         elif auth_suffix == '.yaml':
+#             auth = yaml.load(auth_path.open().read())
 if args.username_curse and args.password_curse:
     auth_curse = {'username': args.username, 'password': args.password}
     auth['curse'] = auth_curse
 if args.username_github and args.password_github:
     auth_github = {'username': args.username, 'password': args.password}
     auth['github'] = auth_github
-    
-    
+
+
 outputDir = Path(config.get('output', 'modpacks'))
 if not outputDir.exists():
     outputDir.mkdir(parents=True)
@@ -195,10 +202,7 @@ def find_curse_file(mc_version: str=defaultGameVersion,
                                          if mc_version in f['GameVesion']
                                          and RLType.get(f['FileType']) in release_type]
             if game_version_latest_files:
-                # sort by version (in name) descending, so highest version first
-                game_version_latest_files.sort(key=lambda x: (x['GameVesion']), reverse=True)
-                # sort by release type so that alpha, beta, release ordering is achieved
-                game_version_latest_files.sort(key=lambda x: (x['FileType']), reverse=True)
+                # default sorting is by date
                 file = game_version_latest_files[0]
                 return project_id, file['ProjectFileID'], file['ProjectFileName']
 
@@ -210,11 +214,8 @@ def find_curse_file(mc_version: str=defaultGameVersion,
              and mc_version in f['game_version']
              and RLType.get(f['release_type']) in release_type]
     if files:
-        # TODO make sure sorting with arrays as values works
-        # sort by version (in name) descending, so highest version first
-        files.sort(key=lambda x: (x['game_version']), reverse=True)
-        # sort by release type so that alpha, beta, release ordering is achieved
-        files.sort(key=lambda x: RLType.get(x['release_type']), reverse=True)
+        # sort by date
+        files.sort(key=lambda x: RLType.get(x['file_date']), reverse=True)
         file = files[0]
         return project_id, file['id'], file['file_name']
 
@@ -493,7 +494,7 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
                 download_list.append({'curse': {'project_id': project_id, 'file_id': file_id}, 'type': 'curse'})
                 iLen += 1  # hope this is about righttio
                 print(
-                    'added {} dependency {} \nof {} at {}'.format(dep_type, file_name, addon['name'], iLen))
+                    'added {} dependency {} \nof {} at {} id: {}'.format(dep_type, file_name, addon['name'], iLen, project_id))
 
     i += 1
     file_name_on_disk = file['file_name_on_disk']

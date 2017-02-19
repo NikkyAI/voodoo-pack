@@ -3,6 +3,8 @@
 import codecs
 import os
 import sys
+from pyhocon import ConfigFactory
+from pyhocon import HOCONConverter
 
 print('using encoding {}'.format(sys.stdout.encoding))
 
@@ -11,18 +13,24 @@ from cfutil import *
 ProjectData = get_project_data()
 print("data len: {}".format(len(ProjectData) / (1024.0 * 1024.0)))
 modnames = [p['Name'] for p in ProjectData if p["PackageType"] == 6]
-with codecs.open(str(outputDir / 'modlist.txt'), "w", encoding='utf8') as modlist:
+with codecs.open('./modlist.txt', "w", encoding='utf8') as modlist:
     modlist.write("\n".join(modnames))
 
-for packConfigFile in config["modpacks"]:
+for packConfig in config["modpacks"]:
     # print(packConfigFile)
-    packConfigPath = Path(configPath.parent / packConfigFile)
-    suffix = packConfigPath.suffix
-    if suffix == '.json':
-        packConfig = json.loads(packConfigPath.open(encoding='utf-8').read())
-    elif suffix == '.yaml':
-        packConfig = yaml.load(packConfigPath.open(encoding='utf-8').read())
-    modpackDir = packConfig.get("output", outputDir / os.path.splitext(packConfigFile)[0])
+    # packConfigPath = Path(configPath.parent / packConfigFile)
+    # suffix = packConfigPath.suffix
+    # if suffix == '.json':
+    #     packConfig = json.loads(packConfigPath.open(encoding='utf-8').read())
+    # elif suffix == '.yaml':
+    #     packConfig = yaml.load(packConfigPath.open(encoding='utf-8').read())
+    #     # print(HOCONConverter.to_hocon(ConfigFactory.from_dict(packConfig)))
+    # elif suffix == '.conf':
+    #     packConfig = ConfigFactory.parse_file(packConfigPath)
+    # modpackDir = packConfig.get("output", outputDir / os.path.splitext(packConfigFile)[0])
+    print(packConfig)
+    modpackDir = packConfig['output']
+
     modpackFolder = Path(modpackDir)
     print('modpack output {}'.format(modpackFolder))
     defaultGameVersion = packConfig.get("mc_version", "1.10.2")
@@ -37,6 +45,7 @@ for packConfigFile in config["modpacks"]:
     for mod in mods:
         curse_parameter = None
         download_parameter = {}
+        print("type: {} : {}".format(type(mod), mod))
         if isinstance(mod, str):
             curse_parameter = {'name': mod}
         elif isinstance(mod, int):
@@ -56,6 +65,7 @@ for packConfigFile in config["modpacks"]:
 
             if 'direct' in mod:
                 # direct download url
+                print(type(mod['direct']))
                 direct_urls.append({'direct': mod['direct']})
                 download_parameter['direct'] = mod['direct']
                 download_parameter['type'] = 'direct'
