@@ -33,7 +33,9 @@ parser.add_argument("--debug", dest="debug", action="store_true", help="display 
 args, unknown = parser.parse_known_args()
 
 
-configPath = Path("config/config.conf")
+configPath = Path("cfpecker.conf")
+if not configPath.exists(): configPath = Path("config/cfpecker.conf")
+
 if args.config:
     configPath = Path(args.config)
 # config = yaml.load(configPath.open().read())
@@ -43,13 +45,10 @@ if config_suffix == '.json':
     config = json.loads(configPath.open().read())
 elif config_suffix == '.yaml':
     config = yaml.load(configPath.open().read())
-    print(HOCONConverter.to_hocon(ConfigFactory.from_dict(config)))
 elif config_suffix == '.conf':
     config = ConfigFactory.parse_file(str(configPath))
 if args.debug:
     print(configPath.name)
-    print('---')
-    #print(yaml.dump(config))
     print(HOCONConverter.to_hocon(config))
     print('\n')
 
