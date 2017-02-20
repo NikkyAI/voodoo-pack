@@ -4,7 +4,7 @@ out
 gen
 __pycache__/
 /modpacks/
-/private/
+/config/private/
 /references/
 /dist/
 /build/

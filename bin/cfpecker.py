@@ -1,12 +1,10 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
 import codecs
-import os
 import sys
-from pyhocon import ConfigFactory
-from pyhocon import HOCONConverter
 
 print('using encoding {}'.format(sys.stdout.encoding))
+
 
 from cfutil import *
 
@@ -106,6 +104,29 @@ for packConfig in config["modpacks"]:
                 else:
                     print('unknown data {}'.format(jenkins))
                     continue
+
+
+            elif 'maven' in mod:
+                # group_id / artifact_id / version
+                maven = mod['maven']
+                if isinstance(maven, dict):
+                    if 'group_id' not in maven:
+                        print('no group_id provided')
+                        continue
+                    if 'artifact_id' not in maven:
+                        print('no artifact_id provided')
+                        continue
+                    if 'version' not in maven:
+                        print('no version provided')
+                        continue
+
+                    download_parameter['type'] = 'mvn'
+                    download_parameter['mvn'] = maven
+
+                else:
+                    print('unknown data {}'.format(maven))
+                    continue
+
 
             elif 'curse' in mod:
                 if isinstance(mod['curse'], dict):

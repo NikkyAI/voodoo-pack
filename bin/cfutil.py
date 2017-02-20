@@ -1,23 +1,25 @@
 #!/bin/python3
 import argparse
-from typing import Mapping, Dict, List, Any, Tuple
-from urllib.parse import urlparse, unquote, quote, urljoin, urlunparse, urlunsplit
-import appdirs
-import json
-from pathlib import Path
-import requests
-import shutil
 import bz2
+import json
+import shutil
+from pathlib import Path
+from typing import Mapping, Dict, List, Any, Tuple
+from urllib.parse import urlparse, unquote, quote, urljoin, urlunsplit
+
+import appdirs
+import bs4 as BeautifulSoup
+import requests
 import rfc6266
 import sys
 import yaml
-from html import escape as html_escape
-#from lxml import html
-import bs4 as BeautifulSoup
 from pyhocon import ConfigFactory
 from pyhocon import HOCONConverter
 from requests.auth import HTTPBasicAuth
+
 from cftypes import RLType, DependencyType
+from maven import Artifact
+from mvn.downloader import Downloader
 
 complete_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2"
 complete_timestamp_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2.txt"
@@ -46,6 +48,7 @@ if config_suffix == '.json':
 elif config_suffix == '.yaml':
     config = yaml.load(configPath.open().read())
 elif config_suffix == '.conf':
+    print(str(configPath))
     config = ConfigFactory.parse_file(str(configPath))
 if args.debug:
     print(configPath.name)
@@ -82,6 +85,7 @@ downloaderDirs = appdirs.AppDirs(appname="cfpecker", appauthor="nikky")
 cache_path_curse = Path(downloaderDirs.user_cache_dir, "curse")
 cache_path_github = Path(downloaderDirs.user_cache_dir, "github")
 cache_path_jenkins = Path(downloaderDirs.user_cache_dir, "jenkins")
+cache_path_maven = Path(downloaderDirs.user_cache_dir, "maven")
 cache_path_general = Path(downloaderDirs.user_cache_dir)
 if not cache_path_curse.exists():
     cache_path_curse.mkdir(parents=True)
@@ -282,6 +286,10 @@ def download(minecraft_path: Path,
             jenkins_parameter = download_entry['jenkins']
             file, name = download_jenkins(mods_path=effective_path, **jenkins_parameter)
 
+        elif download_type == 'mvn':
+            maven_parameter = download_entry['mvn']
+            file, name = download_maven(mods_path=effective_path, **maven_parameter)
+
         feature = download_entry.get('feature', None)
         if feature is not None:
             if file:
@@ -390,6 +398,34 @@ def download_github(mods_path: Path, user: str, repo: str=None, tag:str=None) ->
             return path, repo
 
 
+def download_maven(mods_path: Path, group_id, artifact_id, version, classifier=None, extension=None, base="http://repo1.mvn.org/maven2", username=None, password=None) -> (Path, str):
+    global iLen, i, session
+
+    artifact = Artifact(group_id, artifact_id, version, classifier, extension)
+
+    file_name = artifact.get_filename()
+    path = mods_path / file_name
+
+    dep_cache_dir = cache_path_maven / group_id / artifact_id / version
+    if not dep_cache_dir.exists():
+        dep_cache_dir.mkdir(parents=True)
+
+    print("[{}/{}] {}/{}:{} -> {}".format(i, iLen, group_id, artifact_id, version, file_name))
+
+    # Download file to cache
+    downloader = Downloader(base=base)
+    dep_file = dep_cache_dir / file_name
+    downloader.download(artifact, str(dep_file))
+
+    with open(str(dep_cache_dir / file_name), "rb") as cache:
+        with open(str(mods_path / file_name), "wb") as mod:
+            mod.write(cache.read())
+    i += 1
+
+    return path, artifact_id
+
+
+
 def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master', build_type: str='lastStableBuild') -> (Path, str):
     global iLen, i, session
     _url = urlparse(url)
@@ -479,8 +515,9 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
     for dependency in file['dependencies']:
         dep_type = DependencyType.get(dependency['type'])
         add_on_id = dependency['add_on_id']
-        #for download in download_list:
-            #print(get_add_on(download['project_id']))
+        for download in download_list:
+            if 'type' not in download:
+                print(f"missing type in {download}", file=sys.stderr)
         if add_on_id in [download['curse']['project_id'] for download in download_list if download['type'] == 'curse' and 'curse' in download]:
             # dependency project is already in the download list
             continue

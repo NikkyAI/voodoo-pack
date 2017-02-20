@@ -1,8 +1,0 @@
-authentication: ../private/auth.yaml
-output: modpacks
-modpacks:
-#  - magical_mayhem.yaml
-#  - lite_pack.yaml
-#  - sinful_skies.yaml
-  - lite_pack.conf
-urls: true
