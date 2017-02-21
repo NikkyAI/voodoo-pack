@@ -194,9 +194,15 @@ def find_curse_file(mc_version: str=defaultGameVersion,
                         in release_type]
         if latest_files:
             # sort by release type so that alpha, beta, release ordering is achieved
-            latest_files.sort(key=lambda x: (x['ReleaseType']), reverse=True)
+            # latest_files.sort(key=lambda x: (x['ReleaseType']), reverse=True)
             # sort by date
             latest_files.sort(key=lambda x: (x['FileDate']), reverse=True)
+            # print('latest_files')
+            # for f in project["LatestFiles"]:
+            #     print(f)
+            # print('filtered')
+            # for f in latest_files:
+            #     print(f)
             file = latest_files[0]
             return project_id, file["Id"], file['FileName']
 
@@ -206,6 +212,9 @@ def find_curse_file(mc_version: str=defaultGameVersion,
                                          and RLType.get(f['FileType']) in release_type]
             if game_version_latest_files:
                 # default sorting is by date
+                # print('game version latest')
+                # for f in game_version_latest_files:
+                #     print(f)
                 file = game_version_latest_files[0]
                 return project_id, file['ProjectFileID'], file['ProjectFileName']
 
@@ -218,7 +227,10 @@ def find_curse_file(mc_version: str=defaultGameVersion,
              and RLType.get(f['release_type']) in release_type]
     if files:
         # sort by date
-        files.sort(key=lambda x: RLType.get(x['file_date']), reverse=True)
+        files.sort(key=lambda x: x['file_date'], reverse=True)
+        # print('addon_files')
+        # for f in files:
+        #     print(f)
         file = files[0]
         return project_id, file['id'], file['file_name']
 
@@ -250,6 +262,7 @@ def download(minecraft_path: Path,
     mods_path.mkdir()
 
     global iLen, i, session
+    i = 0
     iLen = len(download_list)
     session = requests.session()
 
