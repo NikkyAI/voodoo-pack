@@ -18,8 +18,8 @@ from pyhocon import HOCONConverter
 from requests.auth import HTTPBasicAuth
 
 from cftypes import RLType, DependencyType
-from maven import Artifact
-from mvn.downloader import Downloader
+
+from mavenpy.run import Maven
 
 complete_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2"
 complete_timestamp_url = "http://clientupdate-v6.cursecdn.com/feed/addons/432/v10/complete.json.bz2.txt"
@@ -411,31 +411,41 @@ def download_github(mods_path: Path, user: str, repo: str=None, tag:str=None) ->
             return path, repo
 
 
-def download_maven(mods_path: Path, group_id, artifact_id, version, classifier=None, extension=None, base="http://repo1.mvn.org/maven2", username=None, password=None) -> (Path, str):
+def download_maven(mods_path: Path, group, artifact, version, classifier=None, packaging=None, remoteRepository="http://repo1.mvn.org/maven2") -> (Path, str):
     global iLen, i, session
 
-    artifact = Artifact(group_id, artifact_id, version, classifier, extension)
+    parameters = dict(
+                        remoteRepositories=remoteRepository,
+                        groupId=group,
+                        artifactId=artifact,
+                        version=version,
+                        dest=str(mods_path)
+    )
+    if packaging:
+        parameters['packaging'] = packaging
 
-    file_name = artifact.get_filename()
+    if classifier:
+        parameters['classifier'] = classifier
+
+    mvn = Maven()
+    mvn.run_in_dir(".", "dependency:get", **parameters)
+
+    file_name = f"{artifact}-{version}.jar"
     path = mods_path / file_name
 
-    dep_cache_dir = cache_path_maven / group_id / artifact_id / version
-    if not dep_cache_dir.exists():
-        dep_cache_dir.mkdir(parents=True)
+    url = urljoin(remoteRepository, f"{group.replace('.', '/')}/{artifact}/{version}/{file_name}")
+    
+    if downloadUrls:
+        url_file_name = "{}.url.txt".format(file_name)
+        print("[{}/{}] {}".format(i, iLen, url_file_name))
+        with open(str(mods_path / url_file_name), "wb") as urlFile:
+            urlFile.write(str.encode(url))
 
-    print("[{}/{}] {}/{}:{} -> {}".format(i, iLen, group_id, artifact_id, version, file_name))
+    print("[{}/{}] {}/{}:{} -> {}".format(i, iLen, group, artifact, version, file_name))
 
-    # Download file to cache
-    downloader = Downloader(base=base)
-    dep_file = dep_cache_dir / file_name
-    downloader.download(artifact, str(dep_file))
-
-    with open(str(dep_cache_dir / file_name), "rb") as cache:
-        with open(str(mods_path / file_name), "wb") as mod:
-            mod.write(cache.read())
     i += 1
 
-    return path, artifact_id
+    return path, artifact
 
 
 

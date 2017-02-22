@@ -110,10 +110,10 @@ for packConfig in config["modpacks"]:
                 # group_id / artifact_id / version
                 maven = mod['maven']
                 if isinstance(maven, dict):
-                    if 'group_id' not in maven:
+                    if 'group' not in maven:
                         print('no group_id provided')
                         continue
-                    if 'artifact_id' not in maven:
+                    if 'artifact' not in maven:
                         print('no artifact_id provided')
                         continue
                     if 'version' not in maven:
