@@ -434,7 +434,7 @@ def download_maven(mods_path: Path, group, artifact, version, classifier=None, p
     path = mods_path / file_name
 
     url = urljoin(remoteRepository, f"{group.replace('.', '/')}/{artifact}/{version}/{file_name}")
-    
+
     if downloadUrls:
         url_file_name = "{}.url.txt".format(file_name)
         print("[{}/{}] {}".format(i, iLen, url_file_name))
