@@ -2,6 +2,7 @@
 import argparse
 import bz2
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Mapping, Dict, List, Any, Tuple
@@ -303,6 +304,10 @@ def download(minecraft_path: Path,
             maven_parameter = download_entry['mvn']
             file, name = download_maven(mods_path=effective_path, **maven_parameter)
 
+        elif download_type == 'local':
+            local_parameter = download_entry['local']
+            file, name = download_local(mods_path=effective_path, **local_parameter)
+
         feature = download_entry.get('feature', None)
         if feature is not None:
             if file:
@@ -414,6 +419,7 @@ def download_github(mods_path: Path, user: str, repo: str=None, tag:str=None) ->
 def download_maven(mods_path: Path, group, artifact, version, classifier=None, packaging=None, remoteRepository="http://repo1.mvn.org/maven2") -> (Path, str):
     global iLen, i, session
 
+
     parameters = dict(
                         remoteRepositories=remoteRepository,
                         groupId=group,
@@ -427,25 +433,45 @@ def download_maven(mods_path: Path, group, artifact, version, classifier=None, p
     if classifier:
         parameters['classifier'] = classifier
 
+    path = None
+
     mvn = Maven()
-    mvn.run_in_dir(".", "dependency:get", **parameters)
+    try:
+        mvn.run_in_dir(".", "dependency:get", **parameters)
 
-    file_name = f"{artifact}-{version}.jar"
-    path = mods_path / file_name
+        file_name = f"{artifact}-{version}.jar"
+        path = mods_path / file_name
 
-    url = urljoin(remoteRepository, f"{group.replace('.', '/')}/{artifact}/{version}/{file_name}")
+        url = urljoin(remoteRepository, f"{group.replace('.', '/')}/{artifact}/{version}/{file_name}")
 
-    if downloadUrls:
-        url_file_name = "{}.url.txt".format(file_name)
-        print("[{}/{}] {}".format(i, iLen, url_file_name))
-        with open(str(mods_path / url_file_name), "wb") as urlFile:
-            urlFile.write(str.encode(url))
+        if downloadUrls:
+            url_file_name = "{}.url.txt".format(file_name)
+            print("[{}/{}] {}".format(i, iLen, url_file_name))
+            with open(str(mods_path / url_file_name), "wb") as urlFile:
+                urlFile.write(str.encode(url))
 
-    print("[{}/{}] {}/{}:{} -> {}".format(i, iLen, group, artifact, version, file_name))
+        print("[{}/{}] {}/{}:{} -> {}".format(i, iLen, group, artifact, version, file_name))
+
+    except:
+        print("[{}/{}] {}".format(i, iLen, "error executing maven"))
 
     i += 1
 
     return path, artifact
+
+def download_local(mods_path: Path, local_file) -> (Path, str):
+    global iLen, i
+
+    file_name = os.path.basename(local_file)
+    path = mods_path / file_name
+
+    print("[{}/{}] {} -> {}".format(i, iLen, local_file, path))
+
+    shutil.copyfile(local_file, str(path))
+
+    i += 1
+
+    return path, file_name
 
 
 

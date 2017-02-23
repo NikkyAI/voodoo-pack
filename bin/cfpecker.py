@@ -127,6 +127,21 @@ for packConfig in config["modpacks"]:
                     print('unknown data {}'.format(maven))
                     continue
 
+            elif 'local' in mod:
+                # group_id / artifact_id / version
+                local = mod['local']
+
+                if isinstance(local, str):
+                    if not local:
+                        print('no file specified')
+                        continue
+
+                    download_parameter['type'] = 'local'
+                    download_parameter['local'] = { 'local_file': local}
+                else:
+                    print('unknown data {}'.format(local))
+                    continue
+
 
             elif 'curse' in mod:
                 if isinstance(mod['curse'], dict):
