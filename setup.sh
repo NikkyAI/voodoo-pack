@@ -1,2 +1,3 @@
 #!/bin/sh
-sudo python3 -m pip install -U -r requirements.txt
+cd $(cd -P -- "$(dirname -- "$0")" && pwd -P)
+sudo pip install .

@@ -10,3 +10,4 @@ __pycache__/
 /build/
 *.spec
 modlist.txt
+/cfpecker.egg-info/

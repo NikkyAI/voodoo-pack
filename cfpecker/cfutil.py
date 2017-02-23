@@ -18,7 +18,7 @@ from pyhocon import ConfigFactory
 from pyhocon import HOCONConverter
 from requests.auth import HTTPBasicAuth
 
-from cftypes import RLType, DependencyType
+from .cftypes import RLType, DependencyType
 
 from mavenpy.run import Maven
 
@@ -60,14 +60,6 @@ auth_file = args.auth or config.get('authentication', None)
 
 auth = config['authentication']
 auth_curse = None
-# if not auth:
-#     if auth_file:
-#         auth_path = Path(configPath.parent / auth_file)
-#         auth_suffix = auth_path.suffix
-#         if auth_suffix == '.json':
-#             auth = json.loads(auth_path.open().read())
-#         elif auth_suffix == '.yaml':
-#             auth = yaml.load(auth_path.open().read())
 if args.username_curse and args.password_curse:
     auth_curse = {'username': args.username, 'password': args.password}
     auth['curse'] = auth_curse
