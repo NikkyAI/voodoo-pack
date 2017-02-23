@@ -4,4 +4,5 @@ pyaml
 rfc6266
 lepl
 beautifulsoup4
+pyhocon
 mavenpy
