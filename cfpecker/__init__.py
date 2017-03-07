@@ -147,6 +147,7 @@ def run():
                         in ['name', 'mc_version', 'version', 'release_type', 'optional']
                         if key in mod
                         }
+
                     print('curse\t{}'.format(curse_parameter))
 
                 if 'optional' in mod:
@@ -156,6 +157,8 @@ def run():
                 print('unknown: {}'.format(mod))
 
             if curse_parameter:
+                if 'mc_version' not in curse_parameter:
+                    curse_parameter['mc_version'] = defaultGameVersion
                 project_id, file_id, file_name = find_curse_file(**curse_parameter)
                 if project_id > 0 and file_id > 0:
                     curse_ids.append((project_id, file_id))
