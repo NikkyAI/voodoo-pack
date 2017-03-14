@@ -1,6 +1,5 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
 
-import cfpecker
-
-cfpecker.run()
+from cfpecker import run
+run()

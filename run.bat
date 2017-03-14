@@ -1,2 +1,2 @@
 cd %~dp0
-py -3 bin\cfpecker.py
+py -3 run.py

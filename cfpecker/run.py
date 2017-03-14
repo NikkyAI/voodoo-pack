@@ -1,7 +1,8 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
 
-import cfpecker
+from cfpecker import run
+
 
 def main():
-    cfpecker.run()
+    run()

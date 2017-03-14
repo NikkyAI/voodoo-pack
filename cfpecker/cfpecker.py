@@ -32,14 +32,15 @@ def run():
         for mod in mods:
             curse_parameter = None
             download_parameter = {}
-            print("type: {} : {}".format(type(mod), mod))
+            # if args.debug:
+            #     print("type: {} : {}".format(type(mod), mod))
             if isinstance(mod, str):
                 curse_parameter = {'name': mod}
             elif isinstance(mod, int):
                 curse_parameter = {'project_id': mod}
             elif isinstance(mod, dict):
                 if args.debug:
-                    print('downloading\n\t{}'.format(mod))
+                    print('downloading\n\t{}'.format(HOCONConverter.to_hocon(mod)))
 
                 # side and feature
                 # TODO clean up by copying values
@@ -52,7 +53,6 @@ def run():
 
                 if 'direct' in mod:
                     # direct download url
-                    print(type(mod['direct']))
                     direct_urls.append({'direct': mod['direct']})
                     download_parameter['direct'] = mod['direct']
                     download_parameter['type'] = 'direct'
@@ -148,6 +148,9 @@ def run():
                         if key in mod
                         }
                     print('curse\t{}'.format(curse_parameter))
+
+                if curse_parameter and 'mc_version' not in curse_parameter:
+                    curse_parameter['mc_version'] = defaultGameVersion
 
                 if 'optional' in mod:
                     download_parameter['optional'] = mod['optional']

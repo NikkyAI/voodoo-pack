@@ -4,6 +4,7 @@ import bz2
 import json
 import os
 import shutil
+from collections import OrderedDict
 from pathlib import Path
 from typing import Mapping, Dict, List, Any, Tuple
 from urllib.parse import urlparse, unquote, quote, urljoin, urlunsplit
@@ -15,6 +16,7 @@ import rfc6266
 import sys
 import yaml
 from pyhocon import ConfigFactory
+from pyhocon import ConfigTree
 from pyhocon import HOCONConverter
 from requests.auth import HTTPBasicAuth
 
@@ -39,6 +41,15 @@ args, unknown = parser.parse_known_args()
 configPath = Path("cfpecker.conf")
 if not configPath.exists(): configPath = Path("config/cfpecker.conf")
 
+def convert_to_dict(conf):
+    if isinstance(conf, OrderedDict):
+        conf = dict(conf)
+        for k, v in conf.items():
+            conf[k] = convert_to_dict(v)
+    if isinstance(conf, list):
+        conf = [convert_to_dict(l) for l in conf]
+    return conf
+
 if args.config:
     configPath = Path(args.config)
 # config = yaml.load(configPath.open().read())
@@ -50,10 +61,11 @@ elif config_suffix == '.yaml':
     config = yaml.load(configPath.open().read())
 elif config_suffix == '.conf':
     print(str(configPath))
-    config = ConfigFactory.parse_file(str(configPath))
+    config = convert_to_dict(ConfigFactory.parse_file(str(configPath)).as_plain_ordered_dict())
 if args.debug:
     print(configPath.name)
     print(HOCONConverter.to_hocon(config))
+    # print(yaml.dump(config))
     print('\n')
 
 auth_file = args.auth or config.get('authentication', None)
@@ -627,7 +639,7 @@ def download_direct(mods_path: Path, direct: str) -> (Path, str):
     if 'JSESSIONID' in file_response.cookies:
         # special case just for http://optifine.net
         parsed_uri = urlparse(file_response.url)
-        soup = BeautifulSoup.BeautifulSoup(file_response.content)
+        soup = BeautifulSoup.BeautifulSoup(file_response.content, 'lxml')
         soup.prettify()
         span = soup.find('span', {'id': 'Download'})
         if span:
