@@ -193,25 +193,28 @@ def find_curse_file(mc_version: str=defaultGameVersion,
 
     if not version:
         # filter by game version and release type
-        latest_files = [f for f in project["LatestFiles"]
-                        if mc_version in f['GameVersion']
-                        and RLType.get(f['ReleaseType'])
-                        in release_type]
-        if latest_files:
-            # sort by release type so that alpha, beta, release ordering is achieved
-            # latest_files.sort(key=lambda x: (x['ReleaseType']), reverse=True)
-            # sort by date
-            latest_files.sort(key=lambda x: (x['FileDate']), reverse=True)
-            # print('latest_files')
-            # for f in project["LatestFiles"]:
-            #     print(f)
-            # print('filtered')
-            # for f in latest_files:
-            #     print(f)
-            file = latest_files[0]
-            return project_id, file["Id"], file['FileName']
 
-        else:
+        # latest files lists older beta versions instead of newer releases
+
+        # latest_files = [f for f in project["LatestFiles"]
+        #                 if mc_version in f['GameVersion']
+        #                 and RLType.get(f['ReleaseType'])
+        #                 in release_type]
+        # if latest_files:
+        #     # sort by release type so that alpha, beta, release ordering is achieved
+        #     # latest_files.sort(key=lambda x: (x['ReleaseType']), reverse=True)
+        #     # sort by date
+        #     latest_files.sort(key=lambda x: (x['FileDate']), reverse=True)
+        #     print('latest_files')
+        #     for f in project["LatestFiles"]:
+        #         print(f['FileName'])
+        #     print('filtered')
+        #     for f in latest_files:
+        #         print(f['FileName'])
+        #     file = latest_files[0]
+        #     return project_id, file["Id"], file['FileName']
+        #
+        # else:
             game_version_latest_files = [f for f in project["GameVersionLatestFiles"]
                                          if mc_version in f['GameVesion']
                                          and RLType.get(f['FileType']) in release_type]
