@@ -216,11 +216,15 @@ def find_curse_file(mc_version: str=defaultGameVersion,
         #
         # else:
             game_version_latest_files = [f for f in project["GameVersionLatestFiles"]
-                                         if mc_version in f['GameVesion']
+                                         if mc_version == f['GameVesion']
                                          and RLType.get(f['FileType']) in release_type]
             if game_version_latest_files:
                 # default sorting is by date
-                # print('game version latest')
+                # print(mc_version)
+                # print('game version latest files')
+                # for f in project["GameVersionLatestFiles"]:
+                #     print(f)
+                # print('filtered')
                 # for f in game_version_latest_files:
                 #     print(f)
                 file = game_version_latest_files[0]
@@ -252,7 +256,8 @@ session = None
 def download(minecraft_path: Path,
              download_list: List[Dict[str, Any]]=(),
              curse_optional: bool=False,
-             direct_urls: bool=True
+             direct_urls: bool=True,
+             gameVersion: str=defaultGameVersion
              ):
     global downloadUrls
     downloadUrls = direct_urls and downloadUrlsConfig
@@ -297,7 +302,7 @@ def download(minecraft_path: Path,
         elif download_type == 'curse':
             curse_parameter = download_entry['curse']
             optional = download_entry.get('optional', curse_optional)
-            file, name = download_curse(mods_path=effective_path, download_list=download_list, download_optional=optional, **curse_parameter)
+            file, name = download_curse(mods_path=effective_path, download_list=download_list, download_optional=optional, mc_version=gameVersion, **curse_parameter)
 
         elif download_type == 'github':
             github_parameter = download_entry['github']
@@ -562,7 +567,7 @@ def download_jenkins(mods_path: Path, url: str, name: str, branch: str='master',
     return None, name
 
 
-def download_curse(mods_path: Path, project_id: int, file_id: int, download_optional: bool = False, download_list: List[Dict[str, Any]]=list(())) -> (Path, str):
+def download_curse(mods_path: Path, project_id: int, file_id: int, download_optional: bool = False, download_list: List[Dict[str, Any]]=list(), mc_version: str=defaultGameVersion) -> (Path, str):
     global iLen, i, session
 
     dep_cache_dir = cache_path_curse / str(project_id) / str(file_id)
@@ -581,10 +586,10 @@ def download_curse(mods_path: Path, project_id: int, file_id: int, download_opti
         # opt = if op
         if dep_type == DependencyType.Required or \
                 (dep_type == DependencyType.Optional and (download_optional)):
-            project_id, file_id, file_name = find_curse_file(project_id=add_on_id)
+            project_id, file_id, file_name = find_curse_file(project_id=add_on_id, mc_version=mc_version)
             if project_id > 0 and file_id > 0:
                 download_list.append({'curse': {'project_id': project_id, 'file_id': file_id}, 'type': 'curse'})
-                iLen += 1  # hope this is about righttio
+                iLen += 1  # hope this is about right
                 print(
                     'added {} dependency {} \nof {} at {} id: {}'.format(dep_type, file_name, addon['name'], iLen, project_id))
 

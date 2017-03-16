@@ -20,7 +20,7 @@ def run():
 
         modpackFolder = Path(modpackDir)
         print('modpack output {}'.format(modpackFolder))
-        defaultGameVersion = packConfig.get("mc_version", "1.10.2")
+        gameVersion = packConfig.get("mc_version", "1.10.2")
         default_release_types = packConfig.get('release_type', (RLType.Release, RLType.Beta, RLType.Alpha))
         mods = packConfig.get("mods", [])
         download_optional = packConfig.get("optionals", False)
@@ -149,9 +149,6 @@ def run():
                         }
                     print('curse\t{}'.format(curse_parameter))
 
-                if curse_parameter and 'mc_version' not in curse_parameter:
-                    curse_parameter['mc_version'] = defaultGameVersion
-
                 if 'optional' in mod:
                     download_parameter['optional'] = mod['optional']
 
@@ -159,6 +156,8 @@ def run():
                 print('unknown: {}'.format(mod))
 
             if curse_parameter:
+                if 'mc_version' not in curse_parameter:
+                    curse_parameter['mc_version'] = gameVersion
                 project_id, file_id, file_name = find_curse_file(**curse_parameter)
                 if project_id > 0 and file_id > 0:
                     curse_ids.append((project_id, file_id))
@@ -177,4 +176,4 @@ def run():
                 print('error with: {}'.format(mod))
                 print(type(mod))
 
-        download(modpackFolder, download_list=downloads, curse_optional=download_optional, direct_urls=direct_urls_bool)
+        download(modpackFolder, download_list=downloads, curse_optional=download_optional, direct_urls=direct_urls_bool, gameVersion=gameVersion)

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='cfpecker',
-      version='0.2.1',
+      version='0.2.2',
       description='Automated modpack builder utility',
       url='https://github.com/NikkyAI/cfpecker',
       author='NikkyAi',
