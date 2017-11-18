@@ -1,0 +1,64 @@
+defaults:
+    # TODO: local
+    # TODO:jenkins
+
+    curse: &direct
+        type: direct
+        url: null
+        file_name_on_disk: null
+        package_type: mod
+        path: mods
+
+    curse: &curse
+        type: curse
+        # release_type: [Release, Beta] # default_release_types
+        # name: null
+        # id: null
+        # mc_version: '1.12.2' # ? # defaultGameversion
+        package_type: mod
+        path: mods
+        
+        # TODO: optional: falspe: mvne # if curse should add optional dependencies
+        # TODO: required: true # if curse not add required dependencies / disable dependency resolition
+
+    github: &github
+        type: github
+        # user: null
+        # repo: null
+        # tag: null
+        package_type: mod
+        path: mods
+
+    maven: &mvn
+        type: mvn
+        # remoteRepository: null
+        # group: null
+        # artifact: null
+        # version: null
+        package_type: mod
+        path: mods
+
+    local: &local
+        type: local
+        file: null
+        # file_name_on_disk: null
+        package_type: mod
+        path: mods
+
+    side:
+      client: &client
+        side: client
+
+      server: &server
+        side: server
+
+      both: &both
+        side: server
+
+    feature: &feature
+        # feature_name: name or name of mod that depends on this
+        selected: true
+        # description: null
+        # recommendation: "starred" or "avoid"
+
+optionals: false

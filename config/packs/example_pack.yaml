@@ -1,0 +1,88 @@
+# output: modpacks
+name: Example pack
+mc_version: "1.12.2"
+
+optionals: true
+
+forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
+
+urls: true
+release_type:
+  - Release
+  - Beta
+  - Alpha
+
+# TODO: implement includes
+# and make sure to break on dependency loops
+include:
+  - base_pack
+
+asie_mod_archive: &asie_mod_archive: https://asie.pl/files/mods/
+
+mods:
+  - Baubles
+  # - Botania
+
+  - <<: [*mvn, *feature]
+    remoteRepository: "http://mvn.rx14.co.uk/local/"
+    group: vazkii.botania
+    artifact: Botania
+    version: "r1.9-341.870"
+    # feature properties
+    description: "test - feature descriotion" # i hope i can get this from maven eventually
+    selected: false
+    recommendation: "starred" # starred or avoid
+
+  - <<: *curse # it a curse mod
+    name: Quark 
+
+  - <<: *github # to be implemented again soon(tm)
+    user: copygirl
+    repo: WearableBackpacks
+    tag: v1.1.0.2-beta
+
+  - <<: *direct
+    url: !join [*asie_mod_archive, Charset/Charset-0.5.0.79.jar]
+
+  - <<: *direct
+    url: !join [*asie_mod_archive, FoamFix/foamfix-0.8.1-1.12-anarchy.jar]
+  
+  - <<: [*curse, *server]
+    name: "Thump"
+  
+  - <<: [*curse, *server]
+    name: "Thumpcord"
+  
+  - <<: [*curse, *client]
+    name: "AppleSkin"
+
+  - <<: [*curse, *client, *feature]
+    name: "NoNausea"
+    # description: No puking # dscription is loaded by curse
+    recommendation: "starred"
+    selected: true
+
+  # - Guide-API 
+
+  # - OpenComputers
+  # - Railcraft
+
+  # - Actually Additions # TODO consider removing
+  # - Random Things # silly stuff that is all over the place
+  # - Refined Storage # got enough storage, thanks
+  # - "Blood Magic "
+  # - Roots # too much magic already
+  # - Super Circuit Maker
+
+  - Chisel
+  - Chisels & Bits
+  - Drawers & Bits
+
+  - <<: [ *curse, *feature]
+    name: RFTools
+
+  - <<: [ *curse, *feature]
+    name: RFTools Dimensions
+
+  - <<: *local
+    file: OptiFine_1.12.2_HD_U_C6.jar

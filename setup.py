@@ -1,26 +1,42 @@
-from setuptools import setup
+# from setuptools import setup
+from subzero import setup, Executable
 
-setup(name='cfpecker',
-      version='0.2.2',
-      description='Automated modpack builder utility',
-      url='https://github.com/NikkyAI/cfpecker',
-      author='NikkyAi',
-      author_email='root@nikky.moe',
-      license='LGPL',
-      packages=['cfpecker'],
-      install_requires=[
-          'appdirs',
-          'requests',
-          'pyaml',
-          'rfc6266',
-          'lepl',
-          'beautifulsoup4',
-          'pyhocon',
-          'mavenpy'
-      ],
-      entry_points={
+setup(
+    name='voodoo',
+    version='0.3',
+    description='Automated modpack builder utility',
+    url='https://github.com/NikkyAI/voodoo-pack',
+    author='NikkyAi',
+    author_email='root@nikky.moe',
+    license='LGPL',
+    packages=['voodoo'],
+    install_requires=[
+        'appdirs',
+        'requests',
+        'pyaml',
+        'rfc6266',
+        'lepl',
+        'beautifulsoup4',
+        'mavenpy'
+    ],
+    entry_points={
         'console_scripts': [
-            'cfpecker=cfpecker.run:main',
+            'voodoo=voodoo.__main__:main',
         ],
-      }
-      )
+    },
+    options={
+        'build_exe': {
+            'hiddenimports': [],
+            'pathex': [],
+            'datas': [],
+        },
+        'bdist_msi': {
+            'upgrade_code':
+            '66620F3A-DC3A-11E2-B341-002219E9B01E',
+            'shortcuts': [
+                'ProgramMenuFolder\Hello World = my_project',
+                # 'ProgramMenuFolder\Hello World\Hello World = my_project',
+            ],
+        }
+    },
+)

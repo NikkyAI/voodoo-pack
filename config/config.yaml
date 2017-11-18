@@ -1,0 +1,8 @@
+
+output: &output
+  modpacks
+
+modpacks: # TODO: turn into list
+  "example_pack": 
+    <<: *modpack
+    name: Example pack

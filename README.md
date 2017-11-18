@@ -1,15 +1,18 @@
-# curseforge-pack-builder (name subject to change)
+# voodoo-pack
+
 a utility to create modpacks for sklauncher
 and download mods from curseforge and other sources
-with minimal configuration
+with minimal (and hhopefully intuitive) configuration
 
 ## Features
 
 downloads mods from
+
 - `curse`forge
 - `jenkins`
 - `github` releases
 - `direct` urls
+- `local` no real download i guess
 
 downloads dependencies for curse mods
 
@@ -21,12 +24,14 @@ caches downloaded mods to avoid redownloading for `curse`, `jenkins` and `github
 
 ## setup and execution
 
-execute `setup.sh` or `setup.bat` once to install the required packages
+execute `make install-required` or `pip install --user -r requirements.txt` once to install the required packages
 
-execute `run.sh` or `run.bat` to build the packs
+execute `make run` or `python -m voodoo` to execute the pack builder
 
 ## Configuration
-### main config file 
+
+### main config file
+
 example:
 `config/config.yaml`
 
@@ -38,66 +43,93 @@ modpacks:
 urls: true
 ```
 
-- `authentication`: str   
-  path to a file containing username and password   
-  for `curse` and `github`   
-  you can set username and password through commandline flags though and have no passwords saved in plaintext
-  example: [auth.yaml](config/auth.yaml)   
+- `authentication`: str \
+  path to a file containing username and password \
+  for `github` \
+  you can set username and password through commandline flags though \
+  and have no passwords saved in plaintext \
+  example: [auth.yaml](config/auth.yaml)
   - optional
   - default: none
-- `output`: str   
+- `output`: str \
   path to the output folder for modpacks
   - optional
   - default: `modpacks/`
-- `modpacks`: List[str]   
+- `modpacks`: List[str] \
   list of Paths to modpack config files relative to the parent folder of the config file
   - required
-- urls: bool   
+- urls: bool \
   enable saving .url.txt files next to the mod jars
   - optional
   - default: `false`
 
 ### modpack config files
+
 example:
-`config/%modpack%.yaml`
+`config/packs/%modpack%.yaml`
 
 ```yaml
-output: "../../minecraft/modpackcreator/modpacks/magical_mayhem/src/" #realtive or abslute path
-mcversion: 1.10.2
-optionals: true # refers to curseforge optional dependencies
+name: Example pack
+
+mc_version: "1.12.2"
+
+optionals: true
+# this adds also optiona dependencies from curse and other sources
+
+forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
+
+urls: true
 release_type:
-- Release
-- Beta
-- Alpha
-mods:
-- name: JourneyMap
-  version: map-1.10.2
-  release_type:
   - Release
   - Beta
-- curse: Applied Energistics 2
-  side: client #goes into mods/_CLIENT/
-- direct: https://github.com/copygirl/BetterStorage/releases/download/v0.13.1.127/BetterStorage-1.7.10-0.13.1.127.jar
-  feature:
-   # https://github.com/SKCraft/Launcher/wiki/Optional-Features#via-infojson-files
-    description: this is the wrong version, but Wearablebackpacks is not done yet
-    recommendation: none # | starred | avoid
+  - Alpha
+
+asie_mod_archive: &asie_mod_archive: https://asie.pl/files/mods/
+
+mods:
+
+  - <<: *curse # it a curse mod
+    name: Quark
+
+  - Baubles # just the curse mod name works as well
+
+  - <<: [*mvn, *feature] # not yet integrated
+    remoteRepository: "http://mvn.rx14.co.uk/local/"
+    group: vazkii.botania
+    artifact: Botania
+    version: "r1.9-341.870"
+    # feature properties
+    description: "test - feature descriotion" # i hope i can get this from maven eventually
     selected: false
-- github: copygirl/BetterStorage
-- 228756
-- curse: Chisel
-  side: both # goes into mods/ also the default anyway
-- direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
-  side: client # goes into mods/_CLIENT
-- Extra Utilities
+    recommendation: "starred" # starred or avoid
+
+  - <<: *github # not yet integrated
+    user: copygirl
+    repo: WearableBackpacks
+    tag: v1.1.0.2-beta
+
+  - <<: *direct
+    url: !join [*asie_mod_archive, Charset/Charset-0.5.0.79.jar] # join strings
+
+  - <<: *direct
+    url: !join [*asie_mod_archive, FoamFix/foamfix-0.8.1-1.12-anarchy.jar]
+
+  - <<: [*curse, *client, *feature]
+    name: "NoNausea"
+    # description: No puking # dscription is loaded by curse
+    recommendation: "starred"
+    selected: true
+
+  - <<: *local
+    file: OptiFine_1.12.2_HD_U_C6.jar
 ```
 
 - `output`: str
-  - default: `modpack/`
-  - info: this has to match with the src folder in from the creatortools 
+  - default: `modpacks`
+  - info: this has to match with the src folder from the creatortools
 - `mc_version`: str
   - optional
-  - default: `1.10.2`
+  - default: `1.10.2` TODO: latest recommended forge version
 - `optionals`: bool
   - info: download optional dependencies of curseforge mods
   - optional
@@ -114,27 +146,28 @@ mods:
     - Alpha
     - Beta
     ```
-  - mods: List  
+  - mods: List
+
   see [mods](#mods)
 
-
 #### mods
+
 list of entries
 
 example entries
 
 ```yaml
-- name: JourneyMap
+- <<: [*featue, *curse]
+  name: JourneyMap
   version: map-1.10.2
   release_type:
   - Release
   - Beta
   mc_version: '1.10.2'
   side: client
-  feature:
-    description: Minimap
-    recommendation: starred
-    selected: true
+  # description: Minimap # is loaded from curse
+  recommendation: starred
+  selected: true
 ```
 
 a entry can be
@@ -146,36 +179,34 @@ a entry can be
 ##### short forms
 
 ###### id
-`- 228756` –> `- project_id: 228756`   
-`- curse: Extra 228756` –> `- project_id: 228756`
+
+`- 228756` –> `- addon_id: 228756`
 
 ###### name
-`- Extra Utilities` –> `- name: Extra Utilities`   
-`- curse: Extra Utilities` –> `- name: Extra Utilities`
+
+`- Extra Utilities` –> `- name: Extra Utilities`
 
 ###### user/repo
+
+NOT YET IMPLEMENTED
+TODO:
+
+`- copygirl/WearableBackpacks` -->
+
 ```yaml
-- github: copygirl/WearableBackpacks
-``` -> 
-```yaml
-- github
-    user: copygirl
-    repo: WearableBackpacks
+- <<: *github
+  user: copygirl
+  repo: WearableBackpacks
 ```
 
 ###### dict
-if the entry does not contain one of the type keys `curse`, `github`, `jenkins`, `direct`
-the entry will be treated as type `curse`
+
+start the entry with the merge key `<<:` referencing anchors for the different mod types
 
 ```yaml
-- name: JourneyMap
+- <<: *curse
+  name: JourneyMap
   mc_version: 1.9
-``` 
-is equal to
-```yaml
-- curse
-    name: JourneyMap
-    mc_version: 1.9
 ```
 
 ##### types
@@ -183,106 +214,142 @@ is equal to
 ###### curse
 
 example:
+
 ```yaml
-- curse
-    name: Extra Utilities
+- <<: *curse
+  name: Extra Utilities
 ```
-```yaml
-- name: Extra Utilities
-```
-keys: 
-- `curse`: dict
-    - `name`: str
-    - `project_id`: int
-    - `mc_version`: str
-      - optional
-    - `version`: str
-      - optional
-      - check if `version` is in the filename 
-    - `release_type` List[str]
-      - optional
-      - values:
-        - `Release`
-        - `Beta`
-        - `Alpha`
+
+keys:
+
+- `name`: str
+- `addon_id`: int
+- `file_id`: int
+  - optional
+  - skips curse file search
+- `mc_version`: str
+  - optional
+- `version`: str
+  - optional
+  - checks if `version` is in the filename
+- `release_type` List[str]
+  - optional
+  - values:
+    - `Release`
+    - `Beta`
+    - `Alpha`
 
 `name` or `project_id` are required
 
-###### jenkins 
+###### jenkins
+
+TODO: implement and update doc
 
 example:
+
 ```yaml
 - jenkins:
-    url: http://ci.tterrag.com/
+    remoteRepository: http://ci.tterrag.com/
     name: Chisel
     branch: 1.10/dev
 ```
 
-keys: 
-- `jenkins`: dict
-    - `url`: str
-    - `name`: str
-    - `branch_id`: str
-      - optional
-      - default: `master`
-    - `build_type`: str
-      - optional
-      - default: `lastStableBuild`
-      - values:
-        - `lastBuild`
-        - `lastStableBuild`
-        - `lastSuccessfulBuild`
-        - `lastFailedBuild`
-        - `lastUnstableBuild`
-        - `lastUnsuccessfulBuild`
-        - `lastCompletedBuild.`
-      
+keys:
 
-###### github 
+- `remoteRepository`: str
+- `name`: str
+- `branch_id`: str
+  - optional
+  - default: `master`
+- `build_type`: str
+  - optional
+  - default: `lastStableBuild`
+  - values:
+    - `lastBuild`
+    - `lastStableBuild`
+    - `lastSuccessfulBuild`
+    - `lastFailedBuild`
+    - `lastUnstableBuild`
+    - `lastUnsuccessfulBuild`
+    - `lastCompletedBuild.`
+
+###### github
+
+TODO: implement and update doc
+
 example:
+
 ```yaml
-- github: copygirl/WearableBackpacks
-- github: copygirl/BetterStorage
-    tag: v0.13.1.127
-- github:
+- copygirl/WearableBackpacks/v0.13.1.127
+- <<: *github:
     user: copygirl
     repo: BetterStorage
     tag: v0.13.1.127
 ```
 
-keys: 
-- `github`: dict
-    - `user`: str
-    - `repo`: str
-    - `tag`: str
-      - optional
-      - default: `ǹone` 
+keys:
 
+- `user`: str
+- `repo`: str
+- `tag`: str
+  - optional
+  - default: latest release
 
 ###### direct
 
+TODO: implement string matching and conversion
+
 example:
+
 ```yaml
-- direct: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
+- <<: *direct:
+  url: http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
+- http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
 ```
-the target must serve the filename in a Content-Disposition Header for now  
+
+the target must serve the filename with a Content-Disposition Header for now or `file_name_on_disk` is specified
 
 keys:
 
-- `direct`: str
+- `url`: str
     url
 
+###### local
+
+expects files to be in
+
+```bash
+$output/'src'/'local'
+```
+
+or be absolute paths
+
+example:
+
+```yaml
+- <<: *local:
+  fiile: HardcoreDarkness-MC1.11-1.8.1.jar
+```
+
+keys:
+
+- `file`: str
+- `file_name_on_disk`: str
+  - optional
 
 ##### side
 
 changes the folder for the mod to `_CLIENT` or `_SERVER`
 
-keys: 
+example:
 
-- `side`: str
-  - values:
-    - `client`
-    - `server`
+```yaml
+- <<: [*curse, *client]
+  name: "NoNausea"
+
+- <<: [*curse, *server]
+  name: "Thumpcord"
+```
 
 see [SKCraft/Launcher/wiki/Creating-Modpacks#marking-files-client-or-server-only](https://github.com/SKCraft/Launcher/wiki/Creating-Modpacks#marking-files-client-or-server-only)
 
@@ -290,37 +357,31 @@ see [SKCraft/Launcher/wiki/Creating-Modpacks#marking-files-client-or-server-only
 
 saves a .info.json file alongside the mod
 
-example: 
+example:
+
 ```yaml
-feature:
-  description: Minimap
+- <<: [ *curse, *feature]
+  name: JourneyMap
+  description: Minimap # cane be filled by curse if left empty
   recommendation: starred
   selected: true
 ```
 
 keys:
 
-- `feature`: dict
-  - `name`: str
-    - optional
-    - default: `projectname` or `filename`
-  - `description`: str
-    - optional
-  - `recommendation`: bool
-    - values
-      - `starred`
-      - `avoid`
-  - `selected`: bool
-    - values 
-      - `true`
-      - `false`
+- `name`: str
+  - optional
+  - default: `addonName` or `filename`
+- `description`: str
+  - optional
+- `recommendation`: str
+  - optional
+  - values
+    - `starred`
+    - `avoid`
+- `selected`: bool
+  - values
+    - `true`
+    - `false`
 
 see [SKCraft/Launcher/wiki/Optional-Features#via-infojson-files](https://github.com/SKCraft/Launcher/wiki/Optional-Features#via-infojson-files)
-
-## make a onefile executable
-
-run `make.bat` or `make.sh`
-make sure that %appdata%\..\Local\Programs\Python\Python35\Scripts
-is in your path
-
-find the executable in `dist/cfpecker.exe`
