@@ -177,42 +177,9 @@ def get_forge_url(version, mc_version: str) -> (str, str, int) :
 
 def get_forge(version, mcversion: str, path: Path, cache_base: Path):
     download_url, file_name_on_disk, longversion = get_forge_url(version, mcversion)
-    dep_cache_dir = Path(cache_base, str(longversion))
-    path = path / file_name_on_disk
+    cache_dir = Path(cache_base, str(longversion))
 
-    # look for file in cache
-    if dep_cache_dir.is_dir():
-        # File is cached
-        cached_files = [f for f in dep_cache_dir.iterdir()]
-        if len(cached_files) >= 1:
-            target_file = path #/ cached_files[0].name
-            print(f"[{longversion} {target_file.name} (cached)")
-            shutil.copyfile(str(cached_files[0]), str(target_file))
-
-            return
-
-    # File is not cached and needs to be downloaded
-    file_response = requests.get(download_url, stream=True)
-    while file_response.is_redirect:
-        source = file_response
-        file_response = session.get(source, stream=True)
-
-
-    # write jarfile
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # with open(str(path), "wb") as forge_installer_file:
-    #     for chunk in file_response.iter_content(chunk_size=1024): 
-    #         if chunk:
-    #             forge_installer_file.write(chunk)
-    with open(path, 'wb') as forge_installer_file:
-        forge_installer_file.write(file_response.content)
-
-    print(f"[{longversion} {forge_installer_file.name} (downloaded)")
-
-    # Try to add file to cache.
-    if not dep_cache_dir.exists():
-        dep_cache_dir.mkdir(parents=True)
-    with open(str(dep_cache_dir / file_name_on_disk), "wb") as forge_installer_file:
-        forge_installer_file.write(file_response.content)
-
+    entry = {'type': 'direct', 'cache_path': str(cache_dir), 'download_url': download_url, 'file_name_on_disk': file_name_on_disk,
+    'path': str(path), 'name': f"forge-{longversion}-installer"}
+    return entry
 

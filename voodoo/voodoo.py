@@ -129,31 +129,33 @@ def run():
 
         src_path = Path(output_base, 'src')
         
+        loader_path = Path(output_base, 'loaders')
+        rmtree(str(loader_path.resolve()), ignore_errors=True)
+        loader_path.mkdir(parents=True, exist_ok=True)
+        forge_entry = get_forge(forge_version, game_version, loader_path, Path(downloaderDirs.user_cache_dir, 'forge'))
+        entries.append(forge_entry)
+        
         # resolve full path
         for entry in entries:
             provider: BaseProvider = provider_map[entry['type']]
             provider.resolve_path(entry)
-        
+
         if args.debug:
             print(f"resolve path entries: \n{yaml.dump(entries)}")
+
+        for entry in entries:
+            provider: BaseProvider = provider_map[entry['type']]
+            provider.write_feature(entry, src_path)
+        
+        if args.debug:
+            print(f"write urls and features entries: \n{yaml.dump(entries)}")
+
 
         if pack_config.get('urls', True):
             # requires path to be known
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.write_direct_url(entry, src_path)
-
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.write_feature(entry, src_path)
-
-        # if args.debug:
-        #     print(f"write urls and features entries: \n{yaml.dump(entries)}")
-
-        loader_path = Path(output_base, 'loaders')
-        rmtree(str(loader_path.resolve()), ignore_errors=True)
-        loader_path.mkdir(parents=True, exist_ok=True)
-        get_forge(forge_version, game_version, loader_path, Path(downloaderDirs.user_cache_dir, 'forge'))
 
         # TODO: github, jenkins, local
 

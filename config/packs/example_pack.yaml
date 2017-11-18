@@ -17,7 +17,7 @@ release_type:
 include:
   - base_pack
 
-asie_mod_archive: &asie_mod_archive: https://asie.pl/files/mods/
+asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
 
 mods:
   - Baubles
