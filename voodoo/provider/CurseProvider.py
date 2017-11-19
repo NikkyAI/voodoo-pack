@@ -58,9 +58,18 @@ class CurseProvider(BaseProvider):
         addon = self.get_add_on(addon_id)
 
         addon_file = self.get_add_on_file(addon_id, file_id)
+
         for dependency in addon_file['dependencies']:
             dep_type = DependencyType.get(dependency['type'])
             dep_addon_id = dependency['addOnId']
+            
+            dep_addon = self.get_add_on(dep_addon_id)
+
+            depends = entry.get('depends', {})
+            depend_list = depends.get(str(dep_type), [])
+            depend_list.append(dep_addon['name'])
+            depends[str(dep_type)] = depend_list
+            entry['depends'] = depends
 
             for other_entry in entries:
                 if other_entry['type'] == 'curse' and other_entry['addon_id'] == dep_addon_id:
@@ -75,24 +84,27 @@ class CurseProvider(BaseProvider):
                     provide_list.append(addon['name'])
                     provides[str(dep_type)] = provide_list
                     other_entry['provides'] = provides
-                    return
 
-            if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and self.download_optional):
-                dep_addon_id, dep_file_id, file_name = self.find_file(
-                    addon_id=dep_addon_id, mc_version=self.default_game_version)
-                if dep_addon_id > 0 and dep_file_id > 0:
-                    dep_addon = self.get_add_on(dep_addon_id)
-                    dep_entry = {'addon_id': dep_addon_id, 'file_id': dep_file_id,
-                                 'name': dep_addon['name'], 'type': 'curse', 'provides': {str(dep_type): [addon['name']]}, '_transient_dependency': True}
-                    entries.append(dep_entry)
-                    depends = entry.get('depends', {})
-                    depend_list = depends.get(str(dep_type), [])
-                    depend_list.append(dep_addon_id)
-                    depends[str(dep_type)] = depend_list
-                    entry['depends'] = depends
+                    break
 
-                    print(
-                        f"added {dep_type} dependency {file_name} \nof {addon['name']}")
+            else:
+                if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and self.download_optional):
+                    dep_addon_id, dep_file_id, file_name = self.find_file (
+                        addon_id=dep_addon_id, mc_version=self.default_game_version)
+                    dep_addon = self.get_add_on_file(dep_addon_id, dep_file_id)
+                    if dep_addon_id > 0 and dep_file_id > 0:
+                        dep_addon = self.get_add_on(dep_addon_id)
+                        dep_entry = {'addon_id': dep_addon_id, 'file_id': dep_file_id,
+                                    'name': dep_addon['name'], 'type': 'curse', 'provides': {str(dep_type): [addon['name']]}, '_transient_dependency': True}
+                        entries.append(dep_entry)
+                        # depends = entry.get('depends', {})
+                        # depend_list = depends.get(str(dep_type), [])
+                        # depend_list.append(dep_addon['name'])
+                        # depends[str(dep_type)] = depend_list
+                        # entry['depends'] = depends
+
+                        print(
+                            f"added {dep_type} dependency {file_name} \nof {addon['name']}")
 
 
     def resolve_feature_dependencies(self, entry: dict, entries: List[dict]):

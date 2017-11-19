@@ -8,7 +8,7 @@ __all__ = ['BaseProvider']
 
 class BaseProvider:
     optional = ()
-    required = ('NOPE')
+    required = ()
     typ = None
 
     def from_dict(self, entry: dict):

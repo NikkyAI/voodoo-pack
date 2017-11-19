@@ -41,8 +41,11 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
 }
 ```
 
-- generate single file features
-- generate direct urls
+- generate multi file features
+
+- dependency graph
+  - grouping for features
+  - grouping for features
 
 - resolve:
   - resolve_dependencies
@@ -51,8 +54,9 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
       track `provides`
   - get_urls
     - `curse` -> `direct`
+    - `jenkins` -> `direct`
     - github (key?) \
-      `curse`, `github` -> `direct`
+      `github` -> `direct`
   - TODO: maven get dependencies ?
   - get metadata from all providers \
     `curse`, `github`, .. description
@@ -60,15 +64,13 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
     feature description is curse addon description by default \
     feature-lists include dependencies ?
 - build
-  - get maven artifact \
-  `maven` -> `cached`
 - download ( + build ? )
-  - download to cache \
-    `direct` -> `cached`
-  - copy from cache to target \
-    `cached` -> `installed`
+  - download (cached) \
+    `direct` -> `done`
+  - get maven artifact \
+    `maven` -> `done`
   - copy local from source to target \
-    `local` -> `installed`
+    `local` -> `done`
   - write optionals / features
 
 - github

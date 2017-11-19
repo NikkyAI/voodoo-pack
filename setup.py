@@ -14,10 +14,8 @@ setup(
         'appdirs',
         'requests',
         'pyaml',
-        'rfc6266',
-        'lepl',
-        'beautifulsoup4',
-        'mavenpy'
+        'mavenpy',
+        'graphviz'
     ],
     entry_points={
         'console_scripts': [
