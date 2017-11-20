@@ -19,10 +19,13 @@ class LocalProvider(BaseProvider):
         print("LocalProvider .ctor")
 
     def fill_information(self, entry: dict):
+        if not 'name' in entry:
+            entry['name'] = Path(entry['file']).resolve().name.rstrip('.jar')
         if not 'file_name' in entry:
             entry['file_name'] = Path(entry['file']).resolve().name
         if not 'file_name_on_disk' in entry:
             entry['file_name_on_disk'] = Path(entry['file']).resolve().name
+        super().fill_information(entry)
 
     def prepare_dependencies(self, entry: dict) -> bool:
         return True

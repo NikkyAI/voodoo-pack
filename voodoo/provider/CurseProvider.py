@@ -178,6 +178,8 @@ class CurseProvider(BaseProvider):
                     new_list.append(provide_addon['name'])
             provides[str(release_type)] = new_list
         entry['provides'] = provides
+        super().fill_information(entry)
+
 
     def prepare_download(self, entry: dict, cache_base: Path):
         entry['type'] = 'direct'
@@ -305,6 +307,5 @@ class CurseProvider(BaseProvider):
             return addon_id, file['id'], file['fileName']  # , description
 
         print(addon)
-        print(
-            f"no matching version found for: {addon['name']} addon url: {addon['websiteURL']} mc_version: {mc_version} version: {version} ")
+        print(f"no matching version found for: {addon['name']} addon url: {addon['websiteURL']} mc_version: {mc_version} version: {version} ")
         return addon_id, -1, ''

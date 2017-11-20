@@ -6,25 +6,76 @@ from graphviz import Digraph
 from .cftypes import DependencyType, Side
 
 def generate_graph(entries: List[dict], path: Path):
-    color_map = {
+    side_color = {
         Side.Client: 'lawngreen',
         Side.Server: 'deepskyblue',
         Side.Both: 'grey'
     }
-    dot = Digraph(comment='Dependencies', filename=path / 'dependencies', format='png', engine='dot') # 'sdfp'
+
+    depedency_style = {
+        DependencyType.Required: 'solid',
+        DependencyType.Optional: 'dashed'
+    }
+    recommendation_color = {
+        'starred': 'green',
+        'avoid': 'red',
+    }
+    selected_color = {
+        True: 'cyan',
+        False: 'darkslategray',
+    }
+
+    dot = Digraph(comment='Dependencies', filename=path / 'dependencies', format='png', engine='fdp') # 'sdfp'
     
     with dot.subgraph(name='cluster_legend') as legend:
         legend.attr(style='filled,dashed')
-        legend.attr(color='lightgrey')
+        legend.attr(fillcolor='lightgrey')
         legend.attr(label='legend')
-        for side, color in color_map.items():
-            legend.node(str(side), color=color, style='filled', contraint='true')
-    
+        with legend.subgraph(name='cluster_sides') as side_cluster:
+            side_cluster.attr(label='sides')
+            for side, color in side_color.items():
+                side_cluster.node(str(side), color=color, style='filled')
+        with legend.subgraph(name='cluster_dependencies') as dependency_cluster:
+            dependency_cluster.attr(label='dependencies')
+            for dependency, style in depedency_style.items():
+                dependency_cluster.node(str(dependency), str(dependency), style=style)
+                dependency_cluster.edge('Dependency', str(dependency), style=style, len='2.0')
+        with legend.subgraph(name='cluster_recommendation') as recommendation_cluster:
+            recommendation_cluster.attr(label='recommendation')
+            for recommendation, color in recommendation_color.items():
+                recommendation_cluster.node('recommendation_'+recommendation, recommendation, style='filled,dashed', fillcolor=color)
+        with legend.subgraph(name='cluster_selected') as selected_cluster:
+            selected_cluster.attr(label='selected')
+            for selected, color in selected_color.items():
+                selected_cluster.node(f'selected_{selected}', str(selected), style='filled,solid', fillcolor=color)
+        legend.attr(style='filled')
+
+
     for entry in entries:
         name = entry.get('name', entry.get('file_name')) or 'unnamed'
         side = Side.get(entry.get('side', 'both'))
-        dot.node(name, name, style='filled', color=color_map[side])
+         
+        print(entry)
+        feature_name = entry.get('feature_name')
+        if feature_name:
+            recommendation = entry.get('recommendation') #, 'none'
+            selected = entry.get('selected')
+            with dot.subgraph(name=f'cluster_{feature_name}') as feature:
+                feature.attr(style='striped')
+                # feature.attr(fillcolor=recommendation_fillcolor[recommendation])
+                fillcolor = f'lightgrey'
+                if recommendation:
+                    fillcolor += f':{recommendation_color[recommendation]};0.1'
+                fillcolor += f':{selected_color[selected]};0.1'
 
+                feature.attr(fillcolor=fillcolor)
+                feature.attr(label=feature_name + '\n' + entry.get('description', ''))
+                feature.node(name, color=side_color[side], style='filled')
+                # if recommendation:
+                #     feature.node(f'{feature_name}_{recommendation}', recommendation, style='filled,dashed', fillcolor=recommendation_color[recommendation])
+        else:
+            dot.node(name, name, style='filled', color=side_color[side])
+       
     # TODO: subgraphs for features
 
     for entry in entries:
@@ -35,11 +86,12 @@ def generate_graph(entries: List[dict], path: Path):
                 dep_type = DependencyType.get(dep_type)
                 if not any(e.get('name') == dependency for e in entries):
                     dot.node(dependency, dependency, style='filled', color='dimgray')
-                    #continue #TODO: add option to skip
+                    # continue #TODO: add option to skip
 
-                style = 'dashed' if dep_type == DependencyType.Optional else 'solid'
-                dot.edge(name, dependency, label=str(dep_type), style=style)
-    
+                dot.edge(name, dependency, style=depedency_style[dep_type], len='3.0')
+
+                
+
     dot.attr(label=r'\n\nTODO: pack name here')
     dot.attr(fontsize='20')
     dot.render()

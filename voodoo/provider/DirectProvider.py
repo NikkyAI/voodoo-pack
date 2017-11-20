@@ -3,6 +3,8 @@ from pathlib import Path
 
 import requests
 
+from urllib.parse import urlparse
+
 from .BaseProvider import BaseProvider
 
 __all__ = ['DirectProvider']
@@ -11,19 +13,37 @@ __all__ = ['DirectProvider']
 class DirectProvider(BaseProvider):
 
     optional = ('file_name')
-    required = ('url', 'file_name_on_disk', 'path')
+    required = ('download_url', 'file_name_on_disk')
     typ = 'direct'
 
     def __init__(self):
         super()
         print("DirectProvider .ctor")
+    
+    def prepare_dependencies(self, entry: dict) -> bool:
+        return True
+    
+    def prepare_download(self, entry: dict, cache_base: Path):
+        url = entry['download_url']
+        parsed = urlparse(url)
+        url_path = Path(parsed.netloc, parsed.path.lstrip('/'))
+        if 'file_name' not in entry:
+            entry['file_name'] = url_path.name
+        if 'file_name_on_disk' not in entry:
+            entry['file_name_on_disk'] = entry['file_name']
+
+        if 'cache_base' not in entry:
+            entry['cache_base'] = str(cache_base)
+        if 'cache_path' not in entry:
+            cache_path = Path(entry['cache_base'], url_path.parent)
+            entry['cache_path'] = str(cache_path)
 
     def download(self, entry: dict, src_path: Path):
         # cache_path_curse / str(id) / str(file_id)
         dep_cache_dir = Path(entry['cache_path'])
 
         file_name_on_disk = entry['file_name_on_disk']
-        path = Path(src_path, entry['path']).resolve()
+        path = Path(src_path, entry['path'])
         download_url = entry['download_url']
 
         # TODO: caching

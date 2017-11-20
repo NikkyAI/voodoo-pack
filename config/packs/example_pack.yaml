@@ -29,7 +29,7 @@ mods:
     artifact: Botania
     version: "r1.9-341.870"
     # feature properties
-    description: "test - feature descriotion" # i hope i can get this from maven eventually
+    description: "test - feature description" # i hope i can get this from maven eventually
     selected: false
     recommendation: "starred" # starred or avoid
 
@@ -80,15 +80,14 @@ mods:
 
   - <<: [ *curse, *feature]
     name: RFTools
-    depends: 
-      optional:
-        - The One Probe
 
-  - <<: [ *curse, *feature]
+  - <<: [*curse, *feature]
     name: RFTools Dimensions
 
-  - <<: *local
+  - <<: [*local, *client, *feature]
     file: OptiFine_1.12.2_HD_U_C6.jar
+    recommendation: avoid
+    selected: false
 
   - <<: *jenkins
     jenkins_url: http://ci.tterrag.com/

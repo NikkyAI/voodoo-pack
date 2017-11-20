@@ -25,6 +25,7 @@ class JenkinsProvider(BaseProvider):
     def fill_information(self, entry: dict):
         if 'name' not in entry:
             entry['name'] = entry['job']
+        super().fill_information(entry)
 
     def prepare_download(self, entry: dict, cache_base: Path):
         jenkins_url = entry['jenkins_url']

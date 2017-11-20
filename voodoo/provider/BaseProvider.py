@@ -32,7 +32,8 @@ class BaseProvider:
         pass
 
     def fill_information(self, entry: dict):
-        pass
+        if 'feature_name' not in entry and 'name' in entry and 'selected' in entry:
+            entry['feature_name'] = entry['name']
 
     def prepare_download(self, entry: dict, cache_base: Path):
         pass

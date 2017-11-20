@@ -5,7 +5,7 @@ defaults:
     curse: &direct
         type: direct
         url: null
-        file_name_on_disk: null
+        # file_name_on_disk: null
         package_type: mod
         path: mods
 
