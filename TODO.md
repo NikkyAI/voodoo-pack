@@ -41,6 +41,9 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
 }
 ```
 
+- support mc_version list
+or support version startswith mc_version
+
 - generate multi file features
 
 - duplicate checks, priority by order

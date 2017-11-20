@@ -151,13 +151,10 @@ class CurseProvider(BaseProvider):
             entry['description'] = addon['summary']
 
         if 'file_name' not in entry:
-            entry['file_name'] = addon_file['fileName']
+            entry['file_name'] = addon_file['fileNameOnDisk']
 
-        if 'file_name_on_disk' not in entry:
-            entry['file_name_on_disk'] = addon_file['fileNameOnDisk']
-
-        if 'download_url' not in entry:
-            entry['download_url'] = addon_file['downloadURL']
+        if 'url' not in entry:
+            entry['url'] = addon_file['downloadURL']
 
         if 'websited_url' not in entry:
             entry['websited_url'] = addon['websiteURL']
@@ -183,8 +180,6 @@ class CurseProvider(BaseProvider):
 
     def prepare_download(self, entry: dict, cache_base: Path):
         entry['type'] = 'direct'
-        if 'file_name_on_disk' not in entry:
-            entry['file_name_on_disk'] = entry['file_name']
 
         if 'cache_base' not in entry:
             entry['cache_base'] = str(cache_base)

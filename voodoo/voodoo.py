@@ -2,18 +2,21 @@
 # -*- coding: utf-8 -*-
 import argparse
 import codecs
-import yaml
 import sys
-import appdirs
-import requests
+import traceback
 from pathlib import Path
 from shutil import rmtree
 from typing import Any, List, Mapping, Sequence
 
-from .provider import *
-from .cftypes import RLType, DependencyType
-from .loader import Loader
+import appdirs
+import requests
+import yaml
+
+from .cftypes import DependencyType, RLType
 from .dependency_graph import generate_graph
+from .loader import Loader
+from .provider import *
+
 
 def run():
     print('using encoding {}'.format(sys.stdout.encoding))
@@ -138,86 +141,91 @@ def run():
             if provider:
                 entry = provider.convert(mod)
                 entries.append(dict(entry))
-
-        remove = []
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            if not provider.prepare_dependencies(entry): #TODO: ranme to filter - something
-                remove.append(entry)
-        remove_dump = yaml.dump(remove).replace('\n', '\n    ')
-        print(f"remove: \n    {remove_dump}")
-        for rem in remove:
-            entries.remove(rem)
-
-        # print(f"entries: \n{yaml.dump(entries)}")
-
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.resolve_dependencies(entry, entries)
-
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.resolve_feature_dependencies(entry, entries)
-
-        # if args.debug:
-            # print(f"resolve dep entries: \n{yaml.dump(entries)}")
-
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.fill_information(entry)
-
-        # print(f"fill info entries: \n{yaml.dump(entries)}")
-        generate_graph(entries, output_base)
-
-        cache_dir = appdirs.AppDirs(appname="voodoo", appauthor="nikky").user_cache_dir
-
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.prepare_download(entry, Path(cache_dir, provider.typ))
-
-        src_path = Path(output_base, 'src')
-        
-        loader_path = Path(output_base, 'loaders')
-        rmtree(str(loader_path.resolve()), ignore_errors=True)
-        loader_path.mkdir(parents=True, exist_ok=True)
-        forge_entry = get_forge(forge_version, game_version, loader_path, Path(cache_dir, 'forge'), args.debug)
-        entries.append(forge_entry)
-        
-        # resolve full path
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.resolve_path(entry)
-
-        if args.debug:
-            print(f"resolve path entries: \n{yaml.dump(entries)}")
-
-        # TODO: github, jenkins
-
-        # clear old mods
-        mod_path = Path(src_path, 'mods')
-        rmtree(str(mod_path.resolve()), ignore_errors=True)
-        mod_path.mkdir(parents=True, exist_ok=True)
-
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.write_feature(entry, src_path)
-
-        if urls:
-            # requires path to be known
+        try:
+            remove = []
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
-                provider.write_direct_url(entry, src_path)
+                if not provider.prepare_dependencies(entry): #TODO: ranme to filter - something
+                    remove.append(entry)
+            remove_dump = yaml.dump(remove).replace('\n', '\n    ')
+            print(f"remove: \n    {remove_dump}")
+            for rem in remove:
+                entries.remove(rem)
 
-        if args.debug:
-            print(f"write urls and features entries: \n{yaml.dump(entries)}")
+            # print(f"entries: \n{yaml.dump(entries)}")
 
-        print('starting download')
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.resolve_dependencies(entry, entries)
 
-        for entry in entries:
-            provider: BaseProvider = provider_map[entry['type']]
-            provider.download(entry, src_path)
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.resolve_feature_dependencies(entry, entries)
 
-        exit(0)
+            # if args.debug:
+                # print(f"resolve dep entries: \n{yaml.dump(entries)}")
+
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.fill_information(entry)
+
+            # print(f"fill info entries: \n{yaml.dump(entries)}")
+            generate_graph(entries, output_base)
+
+            cache_dir = appdirs.AppDirs(appname="voodoo", appauthor="nikky").user_cache_dir
+
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.prepare_download(entry, Path(cache_dir, provider.typ))
+
+            src_path = Path(output_base, 'src')
+            
+            loader_path = Path(output_base, 'loaders')
+            rmtree(str(loader_path.resolve()), ignore_errors=True)
+            loader_path.mkdir(parents=True, exist_ok=True)
+            forge_entry = get_forge(forge_version, game_version, loader_path, Path(cache_dir, 'forge'), args.debug)
+            entries.append(forge_entry)
+            
+            # resolve full path
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.resolve_path(entry)
+
+            if args.debug:
+                print(f"resolve path entries: \n{yaml.dump(entries)}")
+
+            # TODO: github, jenkins
+
+            # clear old mods
+            mod_path = Path(src_path, 'mods')
+            rmtree(str(mod_path.resolve()), ignore_errors=True)
+            mod_path.mkdir(parents=True, exist_ok=True)
+
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.write_feature(entry, src_path)
+
+            if urls:
+                # requires path to be known
+                for entry in entries:
+                    provider: BaseProvider = provider_map[entry['type']]
+                    provider.write_direct_url(entry, src_path)
+
+            if args.debug:
+                print(f"write urls and features entries: \n{yaml.dump(entries)}")
+
+            print('starting download')
+
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.download(entry, src_path)
+        except KeyError as ke:
+            tb = traceback.format_exc()
+            print(repr(ke))
+            print(f'KeyError {ke} in')
+            print(entry)
+            print(tb)
+
 
 def get_forge_data(debug: bool = False) -> List[Mapping[str, Any]]:
     if debug:
@@ -266,9 +274,9 @@ def get_forge_url(version, mc_version: str, debug: bool = False) -> (str, str, i
         return url, filename, longversion
 
 def get_forge(version, mcversion: str, path: Path, cache_base: Path, debug: bool = False):
-    download_url, file_name_on_disk, longversion = get_forge_url(version, mcversion, debug)
+    url, file_name, longversion = get_forge_url(version, mcversion, debug)
     cache_dir = Path(cache_base, str(longversion))
 
-    entry = {'type': 'direct', 'cache_path': str(cache_dir), 'download_url': download_url, 'file_name_on_disk': file_name_on_disk,
+    entry = {'type': 'direct', 'cache_path': str(cache_dir), 'url': url, 'file_name': file_name,
     'path': str(path), 'name': "Minecraft Forge"}
     return entry

@@ -1,0 +1,81 @@
+# output: modpacks
+name: Base Pack
+mc_version: "1.12.2"
+
+optionals: false
+
+forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
+
+urls: true
+release_type:
+  - Release
+
+asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
+
+mods:
+  - Quark
+  - Wearable Backpacks
+
+  - <<: *direct
+    url: !join [*asie_mod_archive, Charset/Charset-0.5.0.79.jar]
+
+  - <<: *direct
+    url: !join [*asie_mod_archive, FoamFix/foamfix-0.8.1-1.12-anarchy.jar]
+
+  - <<: [*direct, *server]
+    url: "https://github.com/Draco18s/CustomOreGen/blob/42789b29e86ff77061b455b9e73bbee241160050/jars/1.12.1-CustomOreGen.jar"
+  
+  - <<: [*curse, *server]
+    name: "Thump"
+    release_type:
+    - Release
+    - Beta
+
+  - <<: [*curse, *server]
+    name: "BTFU Continuous Rsync Incremental Backup"
+
+  - <<: [*curse, *server]
+    name: "WorldEdit"
+
+  - <<: [*curse]
+    name: "Finite Water Control"
+  
+#  - <<: [*curse, *server]  unavailable for 1.12.2
+#    name: "Thumpcord"
+#    release_type:
+#    - Release
+#    - Beta
+  
+  - <<: [*curse, *client]
+    name: "AppleSkin"
+
+  - <<: [*curse, *client, *feature]
+    name: "NoNausea"
+    # description: No puking # dscription is loaded by curse
+    recommendation: "starred"
+    selected: true
+
+  # - Guide-API
+
+  - OpenComputers
+  - Railcraft
+  - Chisels & Bits
+
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: CharsetMC/Charset/1.12
+    name: Charset
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/ProbeDataProvider/1.12
+    name: ProbeDataProvider
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/FruitPhone/1.12
+    name: FruitPhone
+    depends: 
+      required:
+        - ProbeDataProvider

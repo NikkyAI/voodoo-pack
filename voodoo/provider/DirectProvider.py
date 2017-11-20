@@ -12,8 +12,8 @@ __all__ = ['DirectProvider']
 
 class DirectProvider(BaseProvider):
 
-    optional = ('file_name')
-    required = ('download_url', 'file_name_on_disk')
+    optional = ('file_name',)
+    required = ('url', 'path', 'package_type')
     typ = 'direct'
 
     def __init__(self):
@@ -23,15 +23,21 @@ class DirectProvider(BaseProvider):
     def prepare_dependencies(self, entry: dict) -> bool:
         return True
     
-    def prepare_download(self, entry: dict, cache_base: Path):
-        url = entry['download_url']
+    def fill_information(self, entry: dict):
+        url = entry['url']
         parsed = urlparse(url)
         url_path = Path(parsed.netloc, parsed.path.lstrip('/'))
         if 'file_name' not in entry:
             entry['file_name'] = url_path.name
-        if 'file_name_on_disk' not in entry:
-            entry['file_name_on_disk'] = entry['file_name']
+        if 'name' not in entry:
+            entry['name'] =  entry['file_name'].rsplit('.', 1)[0]
 
+    def prepare_download(self, entry: dict, cache_base: Path):
+        url = entry['url']
+        parsed = urlparse(url)
+        url_path = Path(parsed.netloc, parsed.path.lstrip('/'))
+        if 'file_name' not in entry:
+            entry['file_name'] = url_path.name
         if 'cache_base' not in entry:
             entry['cache_base'] = str(cache_base)
         if 'cache_path' not in entry:
@@ -39,12 +45,14 @@ class DirectProvider(BaseProvider):
             entry['cache_path'] = str(cache_path)
 
     def download(self, entry: dict, src_path: Path):
+        url = entry['url']
+        print(f'downloading {url}')
         # cache_path_curse / str(id) / str(file_id)
         dep_cache_dir = Path(entry['cache_path'])
 
-        file_name_on_disk = entry['file_name_on_disk']
+        file_name = entry['file_name']
         path = Path(src_path, entry['path'])
-        download_url = entry['download_url']
+        url = entry['url']
 
         # TODO: caching
         # look for files in cache
@@ -60,13 +68,13 @@ class DirectProvider(BaseProvider):
                 return
 
         # File is not cached and needs to be downloaded
-        file_response = requests.get(download_url, stream=True)
+        file_response = requests.get(url, stream=True)
         while file_response.is_redirect:
             source = file_response
             file_response = requests.get(source, stream=True)
 
         # write jarfile
-        path = path / file_name_on_disk
+        path = path / file_name
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(str(path), "wb") as mod_file:
             mod_file.write(file_response.content)
@@ -74,5 +82,5 @@ class DirectProvider(BaseProvider):
         # Try to add file to cache.
         if not dep_cache_dir.exists():
             dep_cache_dir.mkdir(parents=True)
-        with open(str(dep_cache_dir / file_name_on_disk), "wb") as mod_file:
+        with open(str(dep_cache_dir / file_name), "wb") as mod_file:
             mod_file.write(file_response.content)

@@ -97,12 +97,12 @@ class BaseProvider:
             path = path / side
         entry['path'] = str(path)
         entry['file_path'] = str(Path(path, entry.get(
-            'file_name_on_disk', entry.get('file_name'))))
+            'file_name')))
 
     def write_direct_url(self, entry: dict, src_path: Path):
-        url = entry.get('download_url')
+        url = entry.get('url')
         if url:
-            url = unquote(entry['download_url'])
+            url = unquote(entry['url'])
             full_path = src_path / entry['file_path']
             url_path = Path(f"{full_path}.url.txt").resolve()
             url_path.parent.mkdir(parents=True, exist_ok=True)

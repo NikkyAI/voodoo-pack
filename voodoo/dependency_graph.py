@@ -54,8 +54,7 @@ def generate_graph(entries: List[dict], path: Path):
     for entry in entries:
         name = entry.get('name', entry.get('file_name')) or 'unnamed'
         side = Side.get(entry.get('side', 'both'))
-         
-        print(entry)
+
         feature_name = entry.get('feature_name')
         if feature_name:
             recommendation = entry.get('recommendation') #, 'none'

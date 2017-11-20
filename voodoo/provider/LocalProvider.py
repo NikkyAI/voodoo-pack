@@ -9,8 +9,8 @@ __all__ = ['LocalProvider']
 
 class LocalProvider(BaseProvider):
 
-    optional = ('file_name_on_disk')
-    required = ('file', 'path')
+    optional = ('file_name')
+    required = ('file')
     typ = 'local'
 
     def __init__(self, local_base: Path):
@@ -23,8 +23,6 @@ class LocalProvider(BaseProvider):
             entry['name'] = Path(entry['file']).resolve().name.rstrip('.jar')
         if not 'file_name' in entry:
             entry['file_name'] = Path(entry['file']).resolve().name
-        if not 'file_name_on_disk' in entry:
-            entry['file_name_on_disk'] = Path(entry['file']).resolve().name
         super().fill_information(entry)
 
     def prepare_dependencies(self, entry: dict) -> bool:
@@ -37,8 +35,8 @@ class LocalProvider(BaseProvider):
         file_src = Path(entry['file'])
         if(not os.path.isabs(file_src)):
             file_src = Path(self.local_base, entry['file'])
-        file_name_on_disk = entry.get('file_name_on_disk', file_src.name)
+        file_name = entry.get('file_name', file_src.name)
         path = Path(src_path, entry['path']).resolve()
-        path = path / file_name_on_disk
+        path = path / file_name
         shutil.copyfile(str(file_src), str(path))
-        print(f"copied {file_name_on_disk}")
+        print(f"copied {file_name}")

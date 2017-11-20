@@ -42,8 +42,8 @@ class JenkinsProvider(BaseProvider):
         p = re.compile(file_name_regex)
         for file_name, artifact in artifact_dict.items():
             if p.fullmatch(file_name):
-                entry['download_url'] = artifact.url
-                entry['file_name_on_disk'] = artifact.filename
+                entry['url'] = artifact.url
+                entry['file_name'] = artifact.filename
                 entry['type'] = 'direct'
                 break
         if 'cache_base' not in entry:

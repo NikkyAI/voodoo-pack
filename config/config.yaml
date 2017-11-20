@@ -6,3 +6,7 @@ modpacks: # TODO: turn into list
   "example_pack": 
     <<: *modpack
     name: Example pack
+    enabled: false
+  "testpack": 
+    <<: *modpack
+    name: base pack

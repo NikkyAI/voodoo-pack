@@ -295,7 +295,7 @@ example:
 - http://optifine.net/adloadx?f=OptiFine_1.10.2_HD_U_D2.jar
 ```
 
-the target must serve the filename with a Content-Disposition Header for now or `file_name_on_disk` is specified
+~~the target must serve the filename with a Content-Disposition Header for now or~~ `file_name` is specified or filename is parsed from url
 
 keys:
 
@@ -322,7 +322,7 @@ example:
 keys:
 
 - `file`: str
-- `file_name_on_disk`: str
+- `file_name`: str
   - optional
 
 ##### side
