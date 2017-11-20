@@ -48,6 +48,7 @@ class DependencyType(Enum):
     def __repr__(self):
         return str(self)
 
+
 class Side(IntFlag):
     Client = 1
     Server = 2
@@ -69,6 +70,6 @@ class Side(IntFlag):
 
     def __str__(self):
         return self.name
-        
+
     def __repr__(self):
         return str(self)

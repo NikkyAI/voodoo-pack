@@ -1,12 +1,14 @@
-from .BaseProvider import *
-import requests
-from pathlib import Path
-import shutil
 import os
+import shutil
+from pathlib import Path
+
+from .BaseProvider import BaseProvider
 
 __all__ = ['LocalProvider']
+
+
 class LocalProvider(BaseProvider):
-    
+
     optional = ('file_name_on_disk')
     required = ('file', 'path')
     typ = 'local'
@@ -28,7 +30,7 @@ class LocalProvider(BaseProvider):
     def write_direct_url(self, entry: dict, src_path: Path):
         pass
 
-    def download(self, entry: dict, src_path: Path): #TODO: add 
+    def download(self, entry: dict, src_path: Path):  # TODO: add
         file_src = Path(entry['file'])
         if(not os.path.isabs(file_src)):
             file_src = Path(self.local_base, entry['file'])

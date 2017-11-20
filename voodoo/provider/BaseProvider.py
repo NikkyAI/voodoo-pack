@@ -1,10 +1,11 @@
+import json
 import sys
+from pathlib import Path
 from typing import Any, List
 from urllib.parse import unquote
-from pathlib import Path
-import json
 
 __all__ = ['BaseProvider']
+
 
 class BaseProvider:
     optional = ()
@@ -20,7 +21,7 @@ class BaseProvider:
 
     def __init__(self):
         print("BaseProvider .ctor")
-    
+
     def prepare_dependencies(self, entry: dict) -> bool:
         pass
 
@@ -46,7 +47,8 @@ class BaseProvider:
         if(conv_func):
             converted = conv_func(self, entry)
             if not converted or not isinstance(converted, dict):
-                print(f"failed to convert {entry} to dict, result: {type(converted)}", file=sys.stderr)
+                print(
+                    f"failed to convert {entry} to dict, result: {type(converted)}", file=sys.stderr)
                 return None
             return converted
 
@@ -60,7 +62,8 @@ class BaseProvider:
         # result = all (k in entry for k in self.required)
         missing = list(set(self.required) - set(entry.keys()))
         if missing:
-            print(f"INFO: not matching {self.typ} missing from config: {missing}", file=sys.stderr)
+            print(
+                f"INFO: not matching {self.typ} missing from config: {missing}", file=sys.stderr)
             return False
         return True
 
@@ -72,7 +75,8 @@ class BaseProvider:
             else:
                 return self.match_dict(entry)
         else:
-            print(f"WARNING {entry} is missing 'type' entry\ntrying to match anyways")
+            print(
+                f"WARNING {entry} is missing 'type' entry\ntrying to match anyways")
             return self.match_dict(entry)
 
     def resolve_path(self, entry: dict):
@@ -91,7 +95,8 @@ class BaseProvider:
                 exit(-1)
             path = path / side
         entry['path'] = str(path)
-        entry['file_path'] = str(Path(path, entry.get('file_name_on_disk', entry.get('file_name'))))
+        entry['file_path'] = str(Path(path, entry.get(
+            'file_name_on_disk', entry.get('file_name'))))
 
     def write_direct_url(self, entry: dict, src_path: Path):
         url = entry.get('download_url')
@@ -111,6 +116,7 @@ class BaseProvider:
             full_path = src_path / entry['file_path']
             json_path = Path(f"{full_path}.info.json").resolve()
             json_path.parent.mkdir(parents=True, exist_ok=True)
-            feature_data = {'feature': {k: v for k, v in entry.items() if k in ('description', 'selected', 'recommendation', 'name')}}
+            feature_data = {'feature': {k: v for k, v in entry.items() if k in (
+                'description', 'selected', 'recommendation', 'name')}}
             with open(json_path, 'w') as json_file:
                 json.dump(feature_data, json_file)

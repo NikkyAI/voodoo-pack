@@ -7,9 +7,6 @@ __pycache__/
 /config/private/
 /build/
 *.spec
-modlist.txt
-
-requirements\.txt
 
 cfpecker/
 

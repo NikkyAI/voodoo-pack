@@ -1,7 +1,10 @@
-from .BaseProvider import *
+from .BaseProvider import BaseProvider
+
 __all__ = ['MavenProvider']
+
+
 class MavenProvider(BaseProvider):
-    
+
     optional = ()
     required = ('remoteRepository', 'group', 'artifact', 'version')
     typ = 'mvn'
@@ -9,5 +12,3 @@ class MavenProvider(BaseProvider):
     def __init__(self):
         super()
         print("MavenProvider .ctor")
-
-    

@@ -37,6 +37,14 @@ defaults:
         # version: null
         package_type: mod
         path: mods
+    
+    jenkins: &jenkins
+        type: jenkins
+        # jenkins_url: null
+        # job: null
+        file_name_regex: '.*(?<!-sources\.jar)(?<!-api\.jar)$'
+        package_type: mod
+        path: mods
 
     local: &local
         type: local

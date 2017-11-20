@@ -15,7 +15,8 @@ setup(
         'requests',
         'pyaml',
         'mavenpy',
-        'graphviz'
+        'graphviz',
+        'jenkinsapi'
     ],
     entry_points={
         'console_scripts': [

@@ -43,6 +43,10 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
 
 - generate multi file features
 
+- duplicate checks, priority by order
+
+- allow defining dependencies manually
+
 - dependency graph
   - grouping for features
   - grouping for features

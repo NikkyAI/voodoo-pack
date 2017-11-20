@@ -1,11 +1,15 @@
-from .BaseProvider import *
-import requests
-from pathlib import Path
 import shutil
+from pathlib import Path
+
+import requests
+
+from .BaseProvider import BaseProvider
 
 __all__ = ['DirectProvider']
+
+
 class DirectProvider(BaseProvider):
-    
+
     optional = ('file_name')
     required = ('url', 'file_name_on_disk', 'path')
     typ = 'direct'
@@ -13,10 +17,10 @@ class DirectProvider(BaseProvider):
     def __init__(self):
         super()
         print("DirectProvider .ctor")
-    
 
     def download(self, entry: dict, src_path: Path):
-        dep_cache_dir = Path(entry['cache_path']) # cache_path_curse / str(id) / str(file_id)
+        # cache_path_curse / str(id) / str(file_id)
+        dep_cache_dir = Path(entry['cache_path'])
 
         file_name_on_disk = entry['file_name_on_disk']
         path = Path(src_path, entry['path']).resolve()

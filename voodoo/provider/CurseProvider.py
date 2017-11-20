@@ -1,8 +1,10 @@
-from .BaseProvider import *
-from typing import Any, List, Tuple, Mapping, Dict
-from ..cftypes import *
-import requests
 from pathlib import Path
+from typing import Any, Dict, List, Mapping, Tuple
+
+import requests
+
+from ..cftypes import *
+from .BaseProvider import BaseProvider
 
 __all__ = ['CurseProvider']
 
@@ -62,7 +64,7 @@ class CurseProvider(BaseProvider):
         for dependency in addon_file['dependencies']:
             dep_type = DependencyType.get(dependency['type'])
             dep_addon_id = dependency['addOnId']
-            
+
             dep_addon = self.get_add_on(dep_addon_id)
 
             depends = entry.get('depends', {})
@@ -89,23 +91,17 @@ class CurseProvider(BaseProvider):
 
             else:
                 if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and self.download_optional):
-                    dep_addon_id, dep_file_id, file_name = self.find_file (
+                    dep_addon_id, dep_file_id, file_name = self.find_file(
                         addon_id=dep_addon_id, mc_version=self.default_game_version)
                     dep_addon = self.get_add_on_file(dep_addon_id, dep_file_id)
                     if dep_addon_id > 0 and dep_file_id > 0:
                         dep_addon = self.get_add_on(dep_addon_id)
                         dep_entry = {'addon_id': dep_addon_id, 'file_id': dep_file_id,
-                                    'name': dep_addon['name'], 'type': 'curse', 'provides': {str(dep_type): [addon['name']]}, '_transient_dependency': True}
+                                     'name': dep_addon['name'], 'type': 'curse', 'provides': {str(dep_type): [addon['name']]}, '_transient_dependency': True}
                         entries.append(dep_entry)
-                        # depends = entry.get('depends', {})
-                        # depend_list = depends.get(str(dep_type), [])
-                        # depend_list.append(dep_addon['name'])
-                        # depends[str(dep_type)] = depend_list
-                        # entry['depends'] = depends
 
                         print(
                             f"added {dep_type} dependency {file_name} \nof {addon['name']}")
-
 
     def resolve_feature_dependencies(self, entry: dict, entries: List[dict]):
         # check if it is a feature
@@ -115,11 +111,11 @@ class CurseProvider(BaseProvider):
                 # feature name is not set
                 entry['feature_name'] = entry['name']
 
-        #TODO: enable and handle when writing multifile optional features into modpack.json is implemented
+        # TODO: enable and handle when writing multifile optional features into modpack.json is implemented
         # if 'feature_name' in entry: # or '_prefix' in entry:
         #     feature_name = entry['feature_name']
         #     prefix = feature_name
-            
+
         #     depends = entry.get('depends', {})
         #     for dep_str, dep_ids in depends.items():
         #         for dep_id in dep_ids:
@@ -143,7 +139,6 @@ class CurseProvider(BaseProvider):
     #                 dep_entry = next ( e for e in entries if e['addon_id'] == dep_id )
     #                 self.handle_entry(prefix, feature_name, dep_entry, entries)
 
-
     def fill_information(self, entry: dict):
         addon_id = entry['addon_id']
         file_id = entry['file_id']
@@ -166,7 +161,7 @@ class CurseProvider(BaseProvider):
 
         if 'websited_url' not in entry:
             entry['websited_url'] = addon['websiteURL']
-        
+
         if 'package_type' not in entry:
             entry['package_type'] = addon['packageType']
 
@@ -183,16 +178,17 @@ class CurseProvider(BaseProvider):
                     new_list.append(provide_addon['name'])
             provides[str(release_type)] = new_list
         entry['provides'] = provides
-    
+
     def prepare_download(self, entry: dict, cache_base: Path):
         entry['type'] = 'direct'
         if 'file_name_on_disk' not in entry:
             entry['file_name_on_disk'] = entry['file_name']
-        
+
         if 'cache_base' not in entry:
             entry['cache_base'] = str(cache_base)
         if 'cache_path' not in entry:
-            entry['cache_path'] = str(Path(entry['cache_base'], str(entry['addon_id']), str(entry['file_id'])))
+            entry['cache_path'] = str(Path(entry['cache_base'], str(
+                entry['addon_id']), str(entry['file_id'])))
 
     def get_addon_data(self) -> List[Mapping[str, Any]]:
         if self.debug:
@@ -266,7 +262,7 @@ class CurseProvider(BaseProvider):
                   version: str = None,
                   release_type: List[Any] = None,
                   addon_id: int = None
-                ) -> Tuple[int, int, str]:
+                  ) -> Tuple[int, int, str]:
 
         if not release_type:
             release_type = self.default_release_types

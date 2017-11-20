@@ -2,7 +2,7 @@
 name: Example pack
 mc_version: "1.12.2"
 
-optionals: true
+optionals: false
 
 forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
 
@@ -80,9 +80,39 @@ mods:
 
   - <<: [ *curse, *feature]
     name: RFTools
+    depends: 
+      optional:
+        - The One Probe
 
   - <<: [ *curse, *feature]
     name: RFTools Dimensions
 
   - <<: *local
     file: OptiFine_1.12.2_HD_U_C6.jar
+
+  - <<: *jenkins
+    jenkins_url: http://ci.tterrag.com/
+    job: TheOneProbe-1.12
+    name: The One Probe
+    depends: 
+      optional:
+        - Baubles
+        - Redstone Flux
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: CharsetMC/Charset/1.12
+    name: Charset
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/ProbeDataProvider/1.12
+    name: ProbeDataProvider
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/FruitPhone/1.12
+    name: FruitPhone
+    depends: 
+      required:
+        - ProbeDataProvider

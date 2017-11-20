@@ -19,20 +19,17 @@ def run():
     print('using encoding {}'.format(sys.stdout.encoding))
 
     parser = argparse.ArgumentParser(description="Download mods from curseforge and other sources")
-    parser.add_argument("--auth", help="auth file for curse login")
-    parser.add_argument("--config", help="path to config file")
+    parser.add_argument("config", nargs="?", default="voodoo.yaml", help="config file")
+    parser.add_argument("--auth", help="auth file for github login")
     parser.add_argument("--username_github", help="github login")
     parser.add_argument("--password_github", help="github password")
     parser.add_argument("--debug", dest="debug",
                         action="store_true", help="display debug info")
     args, unknown = parser.parse_known_args()
 
-    config_path = Path("config/config.yaml")
+    config_path = Path(args.config).resolve()
 
-    if args.config:
-        config_path = Path(args.config)
-
-    config_dir = config_path.resolve().parent
+    config_dir = config_path.parent
 
     config = {}
     config_suffix = config_path.suffix
@@ -101,7 +98,8 @@ def run():
             pack_config = yaml.load(f, Loader)
 
         output_base = Path(pack_config.get('output') or 'modpacks', pack).resolve()
-        print(yaml.dump(pack_config))
+        if args.debug:
+            print(yaml.dump(pack_config))
 
         pack_name = pack_config.get('name' or pack)
         download_optional = pack_config.get("optionals", False)
@@ -117,6 +115,7 @@ def run():
         providers.append(CurseProvider(*curse_args))
         providers.append(MavenProvider())
         providers.append(GithubProvider())
+        providers.append(JenkinsProvider())
 
         # TODO: provider.apply_config()
 
@@ -128,9 +127,8 @@ def run():
 
         def find_matching(mod: Any) -> BaseProvider:
             for provider in providers:
-                for provider in providers:
-                    if provider.match(mod):
-                        return provider
+                if provider.match(mod):
+                    return provider
             return None
 
         entries = []
@@ -193,13 +191,16 @@ def run():
         if args.debug:
             print(f"resolve path entries: \n{yaml.dump(entries)}")
 
+        # TODO: github, jenkins
+
+        # clear old mods
+        mod_path = Path(src_path, 'mods')
+        rmtree(str(mod_path.resolve()), ignore_errors=True)
+        mod_path.mkdir(parents=True, exist_ok=True)
+
         for entry in entries:
             provider: BaseProvider = provider_map[entry['type']]
             provider.write_feature(entry, src_path)
-        
-        if args.debug:
-            print(f"write urls and features entries: \n{yaml.dump(entries)}")
-
 
         if urls:
             # requires path to be known
@@ -207,12 +208,8 @@ def run():
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.write_direct_url(entry, src_path)
 
-        # TODO: github, jenkins, local
-
-        # clear old mods
-        mod_path = Path(src_path, 'mods')
-        rmtree(str(mod_path.resolve()), ignore_errors=True)
-        mod_path.mkdir(parents=True, exist_ok=True)
+        if args.debug:
+            print(f"write urls and features entries: \n{yaml.dump(entries)}")
 
         print('starting download')
 

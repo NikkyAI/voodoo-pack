@@ -1,6 +1,7 @@
-import yaml
 import os.path
 from pathlib import Path
+
+import yaml
 
 
 class LoaderMeta(type):

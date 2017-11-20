@@ -243,35 +243,23 @@ keys:
 
 ###### jenkins
 
-TODO: implement and update doc
-
 example:
 
 ```yaml
-- jenkins:
-    remoteRepository: http://ci.tterrag.com/
-    name: Chisel
-    branch: 1.10/dev
+- <<: *jenkins
+  jenkins_url: https://ci.elytradev.com
+  job: elytra/FruitPhone/1.12
 ```
 
 keys:
 
-- `remoteRepository`: str
-- `name`: str
-- `branch_id`: str
+- `jenkins_url`: str
+- `job`: str
+- `file_name_regex` : str
   - optional
-  - default: `master`
-- `build_type`: str
+  - default: `.*(?<!-sources\.jar)(?<!-api\.jar)$`
+- `build_number`: int
   - optional
-  - default: `lastStableBuild`
-  - values:
-    - `lastBuild`
-    - `lastStableBuild`
-    - `lastSuccessfulBuild`
-    - `lastFailedBuild`
-    - `lastUnstableBuild`
-    - `lastUnsuccessfulBuild`
-    - `lastCompletedBuild.`
 
 ###### github
 

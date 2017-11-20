@@ -1,7 +1,10 @@
-from .BaseProvider import *
+from .BaseProvider import BaseProvider
+
 __all__ = ['GithubProvider']
+
+
 class GithubProvider(BaseProvider):
-    
+
     optional = ('tag')
     required = ('user', 'repo')
     typ = 'github'
@@ -9,4 +12,3 @@ class GithubProvider(BaseProvider):
     def __init__(self):
         super()
         print("GithubProvider .ctor")
-    
