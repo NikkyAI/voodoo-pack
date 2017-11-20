@@ -1,0 +1,6 @@
+appdirs
+requests
+pyaml
+mavenpy
+graphviz
+jenkinsapi
