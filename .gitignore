@@ -12,6 +12,8 @@ cfpecker/
 
 \.vscode/\.ropeproject/
 
+virtualenv/
+
 config/old/
 
 config/build/

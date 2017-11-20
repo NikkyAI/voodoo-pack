@@ -1,13 +1,24 @@
-install-required:
-	pip install --user -r requirements.txt
+setup:
+	pip install --user virtualenv
+	virtualenv virtualenv
+	( \
+	    source virtualenv/bin/activate; \
+	    pip install -r requirements.txt; \
+	)
 
 install:
 	pip install --user --force .
 
 run:
-	python -m voodoo config/config.yaml
+	( \
+	    source virtualenv/bin/activate; \
+	    python -m voodoo config/config.yaml; \
+	)
 
 run-debug:
-	python -m voodoo config/config.yaml --debug
+	( \
+	    source virtualenv/bin/activate; \
+	    python -m voodoo config/config.yaml --debug; \
+	)
 
-.PHONY: install-required install run run-debug
+.PHONY: setup install run run-debug
