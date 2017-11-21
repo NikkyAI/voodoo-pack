@@ -14,8 +14,10 @@ def generate_graph(entries: List[dict], path: Path):
 
     depedency_style = {
         DependencyType.Required: 'solid',
-        DependencyType.Optional: 'dashed'
+        DependencyType.Optional: 'dashed',
+        DependencyType.Embedded: 'dotted'
     }
+
     recommendation_color = {
         'starred': 'green',
         'avoid': 'red',
@@ -73,7 +75,7 @@ def generate_graph(entries: List[dict], path: Path):
                 # if recommendation:
                 #     feature.node(f'{feature_name}_{recommendation}', recommendation, style='filled,dashed', fillcolor=recommendation_color[recommendation])
         else:
-            dot.node(name, name, style='filled', color=side_color[side])
+            dot.node(name, name, style='filled', fillcolor=side_color[side])
        
     # TODO: subgraphs for features
 
@@ -84,7 +86,10 @@ def generate_graph(entries: List[dict], path: Path):
             for dependency in dep_list:
                 dep_type = DependencyType.get(dep_type)
                 if not any(e.get('name') == dependency for e in entries):
-                    dot.node(dependency, dependency, style='filled', color='dimgray')
+                    if dep_type == DependencyType.Embedded:
+                        dot.node(dependency, dependency, style='dotted')
+                    else:
+                        dot.node(dependency, dependency, style='filled,dotted', fillcolor='dimgray')
                     # continue #TODO: add option to skip
 
                 dot.edge(name, dependency, style=depedency_style[dep_type], len='3.0')

@@ -14,7 +14,33 @@ asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
 
 mods:
   - Quark
-  - Wearable Backpacks
+  - Lingering Loot
+  - Hopper Ducts
+  - Multi Mine
+  - Blood Moon
+  - Ore Flowers
+  - Extra Bit Manipulation
+  - HWYLA
+  - IKWID (I Know What I'm Doing)
+  - Nutrition
+  - Recurrent Complex
+  - Redstone Paste
+  - Structured Crafting
+  - Tails
+  - OpenComputers
+  - Chisels & Bits
+  - Repose
+  - Roguelike Dungeons
+  - Weather, Storms & Tornadoes
+  - Zombie Awareness
+  - Armor Sound Tweak
+
+  - <<: *curse
+    name: "Wearable Backpacks"
+    mc_version: "1.12"
+    release_type:
+    - Release
+    - Beta
 
   - <<: *direct
     url: !join [*asie_mod_archive, Charset/Charset-0.5.0.79.jar]
@@ -27,18 +53,21 @@ mods:
   
   - <<: [*curse, *server]
     name: "Thump"
+    mc_version: "1.12"
     release_type:
     - Release
     - Beta
 
   - <<: [*curse, *server]
-    name: "BTFU Continuous Rsync Incremental Backup"
+    name: "BTFU continuous rsync incremental backup"
 
   - <<: [*curse, *server]
     name: "WorldEdit"
+    mc_version: "1.12"
 
   - <<: [*curse]
     name: "Finite Water Control"
+    mc_version: "1.12"
   
 #  - <<: [*curse, *server]  unavailable for 1.12.2
 #    name: "Thumpcord"
@@ -57,9 +86,6 @@ mods:
 
   # - Guide-API
 
-  - OpenComputers
-  - Railcraft
-  - Chisels & Bits
 
 
   - <<: *jenkins
