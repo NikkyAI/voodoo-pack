@@ -6,7 +6,7 @@ import sys
 import traceback
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, List, Mapping, Sequence
+from typing import Any, List, Mapping, Sequence, Tuple
 
 import appdirs
 import requests
@@ -134,6 +134,19 @@ def run():
                     return provider
             return None
 
+        def assert_dict(check_name: str, keys: Tuple[str], entries: List[dict]):
+            fail = False
+            all_missing = {}
+            for entry in entries:
+                missing = set(keys) - set(entry.keys())
+                if missing:
+                    print(f"[{check_name}] missing {', '.join(missing)} from \n\t{entry}", file=sys.stderr)
+                    fail = True
+                    entry_id = entry.get('name') or entry.get('url') or str(entry)
+                    all_missing[entry_id] = missing
+            if fail:
+                raise KeyError(all_missing)
+
         entries = []
         for mod in mods:
 
@@ -145,7 +158,7 @@ def run():
             remove = []
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
-                if not provider.prepare_dependencies(entry): #TODO: ranme to filter - something
+                if not provider.prepare_dependencies(entry): # TODO: rename to filter - something
                     remove.append(entry)
             remove_dump = yaml.dump(remove).replace('\n', '\n    ')
             print(f"remove: \n    {remove_dump}")
@@ -169,6 +182,8 @@ def run():
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.fill_information(entry)
 
+            assert_dict('fill_information', ('name', 'package_type'), entries)
+
             # print(f"fill info entries: \n{yaml.dump(entries)}")
             generate_graph(entries, output_base)
 
@@ -177,6 +192,8 @@ def run():
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.prepare_download(entry, Path(cache_dir, provider.typ))
+
+            assert_dict('prepare_download', ('url', 'file_name', 'cache_path'), entries)
 
             src_path = Path(output_base, 'src')
             
@@ -190,6 +207,8 @@ def run():
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.resolve_path(entry)
+
+            assert_dict('resolve_path', ('path', 'file_path'), entries)
 
             if args.debug:
                 print(f"resolve path entries: \n{yaml.dump(entries)}")
@@ -219,12 +238,17 @@ def run():
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.download(entry, src_path)
+
         except KeyError as ke:
             tb = traceback.format_exc()
-            print(repr(ke))
-            print(f'KeyError {ke} in')
-            print(entry)
-            print(tb)
+            if isinstance (ke.args[0], dict):
+                for entry_id, missing_keys in ke.args[0].items():
+                    print(f"{entry_id} \n\tis missing \n\t{', '.join(missing_keys)}")
+            else:
+                print(repr(ke))
+                print(f'KeyError {ke} in')
+                print(entry)
+                print(tb)
 
 
 def get_forge_data(debug: bool = False) -> List[Mapping[str, Any]]:

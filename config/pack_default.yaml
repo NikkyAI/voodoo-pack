@@ -15,8 +15,8 @@ defaults:
         # name: null
         # id: null
         # mc_version: '1.12.2' # ? # defaultGameversion
-        package_type: mod
-        path: mods
+        # package_type: mod
+        # path: mods
         
         # TODO: optional: falspe: mvne # if curse should add optional dependencies
         # TODO: required: true # if curse not add required dependencies / disable dependency resolition
