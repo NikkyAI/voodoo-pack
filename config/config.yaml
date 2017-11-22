@@ -5,6 +5,10 @@ modpacks: # TODO: turn into list
     <<: *modpack
     name: Example pack
     enabled: false
+  'resource_test':
+    <<: *modpack
   "testpack": 
     <<: *modpack
     name: base pack
+    enabled: false
+  

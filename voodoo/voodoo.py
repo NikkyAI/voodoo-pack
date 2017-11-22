@@ -104,6 +104,8 @@ def run():
         pack_name = pack_config.get('name' or pack)
         # download_optional = pack_config.get("optionals", False) # TODO: curse specific
         mc_version = pack_config.get("mc_version")
+        mc_version = list(mc_version)
+        mc_version = [str(v) for v in mc_version]
         assert mc_version, "no Minecraft version defined"
         forge_version = pack_config.get("forge")
         assert forge_version, "no Forge version defined"
@@ -268,8 +270,10 @@ def get_forge_data(debug: bool = False) -> List[Mapping[str, Any]]:
         return forge_data
     return None
 
-def get_forge_url(version, mc_version: str, debug: bool = False) -> (str, str, int) :
+def get_forge_url(version, mc_version: List[str], debug: bool = False) -> (str, str, int) :
     data = get_forge_data(debug)
+    if isinstance(mc_version, list):
+        mc_version = mc_version[0]
     if isinstance(version, str):
         version_str = version
         if version in ('recommended', 'latest'):
@@ -302,7 +306,7 @@ def get_forge_url(version, mc_version: str, debug: bool = False) -> (str, str, i
         url = f"{webpath}/{longversion}/{filename}"
         return url, filename, longversion
 
-def get_forge(version, mcversion: str, path: Path, cache_base: Path, debug: bool = False):
+def get_forge(version, mcversion: List[str], path: Path, cache_base: Path, debug: bool = False):
     url, file_name, longversion = get_forge_url(version, mcversion, debug)
     cache_dir = Path(cache_base, str(longversion))
 

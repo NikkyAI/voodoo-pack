@@ -200,7 +200,7 @@ class CurseProvider(BaseProvider):
             print(
                 f'get https://cursemeta.nikky.moe/api/addon/?mods=1&property=id,name,summary,websiteURL,packageType,categorySection.path')
         req = requests.get(
-            f'https://cursemeta.nikky.moe/api/addon/?mods=1&property=id,name,summary,websiteURL,packageType,categorySection.path')
+            f'https://cursemeta.nikky.moe/api/addon/?mods=1&texturepacks=1&worlds=1&property=id,name,summary,websiteURL,packageType,categorySection.path')
         req.raise_for_status()
         if req.status_code == 200:
             addon_data = req.json()
@@ -259,7 +259,7 @@ class CurseProvider(BaseProvider):
                 addon_files[file['id']] = file
             return files
 
-    def find_file(self, mc_version: str = None,
+    def find_file(self, mc_version: List[str] = None,
                   name: str = None,
                   version: str = None,
                   release_types: List[Any] = None,
@@ -272,6 +272,7 @@ class CurseProvider(BaseProvider):
         release_types = [RLType.get(t) for t in release_types]
         if not mc_version:
             mc_version = self.default_mc_version
+        mc_version = list(mc_version)
 
         addon = {}
 
@@ -295,7 +296,7 @@ class CurseProvider(BaseProvider):
         # ModVersion in f['file_name']
         files = [f for f in files
                  if version and version in f['fileName'] or not version
-                 and mc_version in f['gameVersion']
+                 and any(version in mc_version for version in f['gameVersion'])
                  and RLType.get(f['releaseType']) in release_types]
         if files:
             # sort by date
@@ -304,7 +305,7 @@ class CurseProvider(BaseProvider):
             # for f in files:
             #     print(f)
             file = files[0]
-            return addon_id, file['id'], file['fileName']  # , description
+            return addon_id, file['id'], file['fileNameOnDisk']  # , description
 
         print(addon)
         print(f"no matching version found for: {addon['name']} addon url: {addon['websiteURL']} mc_version: {mc_version} version: {version} ")

@@ -1,0 +1,24 @@
+# output: modpacks
+name: Resource Test
+mc_version: 
+  - 1.12.2
+  - 1.12
+
+forge: "latest" # `version`(-recommended /-latest) or branch-name
+
+provider_settings:
+  curse:
+    <<: *curse_settings
+    optional: false
+    release_types:
+      - Release
+  
+  local:
+    <<: *local_settings
+    folder: local
+
+asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
+
+mods:
+  - Faithful [32x]
+  - Skyblock 3

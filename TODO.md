@@ -41,44 +41,21 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
 }
 ```
 
-- support mc_version list
-or support version startswith mc_version
+- packageType: folder, singlefile
+  - folder: uncompress
+  - singlefile
+
+- improve cache system
+  - copy into target filename
+
+- support mc_version list \
+  or support version startswith mc_version
 
 - generate multi file features
 
-- duplicate checks, priority by order
+- duplicate checks, priority by order \
+  done in curse
 
-- allow defining dependencies manually
-
-- dependency graph
-  - grouping for features
-  - grouping for features
-
-- resolve:
-  - resolve_dependencies
-    - curse resolves dependencies \
-      add optional and required `curse` \
-      track `provides`
-  - get_urls
-    - `curse` -> `direct`
-    - `jenkins` -> `direct`
-    - github (key?) \
-      `github` -> `direct`
-  - TODO: maven get dependencies ?
-  - get metadata from all providers \
-    `curse`, `github`, .. description
-  - handle optionals / features \
-    feature description is curse addon description by default \
-    feature-lists include dependencies ?
-- build
-- download ( + build ? )
-  - download (cached) \
-    `direct` -> `done`
-  - get maven artifact \
-    `maven` -> `done`
-  - copy local from source to target \
-    `local` -> `done`
-  - write optionals / features
 
 - github
 - jenkins
@@ -89,4 +66,4 @@ or support version startswith mc_version
   - lastUnstableBuild
   - lastUnsuccessfulBuild
   - lastCompletedBuild.
-
+- maven
