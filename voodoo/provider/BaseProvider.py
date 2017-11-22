@@ -1,28 +1,74 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Dict
 from urllib.parse import unquote
+import inspect
 
 __all__ = ['BaseProvider']
 
 
 class BaseProvider:
-    optional = ()
-    required = ()
+    """
+    Provider Base class
+    """
+    # optional = ()
+    required_attributes = ()
+    defaults = {}
     typ = None
 
     def from_dict(self, entry: dict):
-        return entry
+        return entry #TODO: filter out not optiona and not requires
 
     conversion = {
         dict: from_dict
     }
 
-    def __init__(self):
-        print("BaseProvider .ctor")
+    debug = False
+    default_mc_version = None
+    
+    def __init__(self, *args, **kwargs):
+        if type(self) is BaseProvider:
+            return
+        print(f'{self.typ.upper()} Provider .ctor')
+        attribute_keys = ['debug', 'default_mc_version']
+        for attribute_key in attribute_keys:
+            if attribute_key in kwargs:
+                value = kwargs.get(attribute_key)
+                setattr(self, attribute_key, kwargs[attribute_key])
 
-    def prepare_dependencies(self, entry: dict) -> bool:
+        provider_settings = kwargs.get('provider_settings', {})
+        provider_settings = provider_settings.get(self.typ, {})
+
+        if self.debug:
+            print(f'{self.typ} settings: {provider_settings}')
+
+        attributes = inspect.getmembers(self, lambda a:not(inspect.isroutine(a)))
+        base_attributes = inspect.getmembers(self.__class__.__bases__[0](), lambda a:not(inspect.isroutine(a)))
+        attribute_keys = [a[0] for a in attributes if not(a[0].startswith('_'))]
+        base_keys = [a[0] for a in base_attributes if not(a[0].startswith('_'))]
+        attribute_keys = list(set(attribute_keys) - set(base_keys))
+
+        for attribute_key in attribute_keys:
+            if attribute_key in provider_settings:
+                value = provider_settings.get(attribute_key)
+                if self.debug:
+                    print(f'setting {attribute_key}, value={value}')
+                setattr(self, attribute_key, provider_settings[attribute_key])
+
+        self.defaults = {k: getattr(self, k) for k in attribute_keys}
+        if self.defaults or self.debug:
+            print(f'defaults = {self.defaults}')
+
+    def apply_defaults(self, entry: dict):
+        for key, value in self.defaults.items():
+            if key not in entry:
+                entry[key] = value
+
+    def prepare_dependencies(self, entry: dict):
+        pass
+
+    def validate(self, entry: dict) -> bool:
         pass
 
     def resolve_dependencies(self, entry: dict, entries: List[dict]):
@@ -61,7 +107,7 @@ class BaseProvider:
 
     def match_dict(self, entry: dict):
         # result = all (k in entry for k in self.required)
-        missing = list(set(self.required) - set(entry.keys()))
+        missing = list(set(self.required_attributes) - set(entry.keys()))
         if missing:
             print(
                 f"INFO: not matching {self.typ} missing from config: {missing}", file=sys.stderr)

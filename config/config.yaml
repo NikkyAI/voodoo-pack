@@ -1,6 +1,4 @@
-
-output: &output
-  modpacks
+output: modpacks
 
 modpacks: # TODO: turn into list
   "example_pack": 

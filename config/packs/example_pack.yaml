@@ -1,16 +1,24 @@
 # output: modpacks
 name: Example pack
-mc_version: "1.12.2"
 
-optionals: false
+mc_version: "1.12.2"
 
 forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
 
 urls: true
-release_type:
-  - Release
-  - Beta
-  - Alpha
+
+provider_settings:
+  curse:
+    <<: *curse_settings
+    optional: false
+    release_types:
+      - Release
+      - Beta
+      - Alpha
+
+  local:
+    <<: *local_settings
+    folder: local
 
 # TODO: implement includes
 # and make sure to break on dependency loops

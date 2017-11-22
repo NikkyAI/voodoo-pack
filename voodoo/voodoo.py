@@ -37,7 +37,7 @@ def run():
     config = {}
     config_suffix = config_path.suffix
     if config_suffix == '.yaml':
-        default_config_path = config_dir / "config_default.yaml"
+        default_config_path = config_dir / "default.yaml"
         generated_config_path = config_dir / 'build' / 'generated_config.yaml'
         generated_config_path.parent.mkdir(parents=True, exist_ok=True)
         with open(generated_config_path, 'w') as outfile:
@@ -81,47 +81,44 @@ def run():
             continue
         print(yaml.dump(pack_meta_config))
         pack_base = pack  # TODO: file base
-        pack_configpath = config_dir / 'packs' / f"{pack_base}.yaml"
-        defaultpack_configPath = config_dir / "pack_default.yaml"
-        generatedpack_configPath = config_dir / "build" / \
+        pack_config_path = config_dir / 'packs' / f"{pack_base}.yaml"
+        generated_pack_config_path = config_dir / "build" / \
             f"{pack_base}.yaml"  # TODO: make sure directory exists
-        generatedpack_configPath.parent.mkdir(parents=True, exist_ok=True)
-        # config = yaml.load(configPath.open().read())
-        with open(generatedpack_configPath, 'w') as outfile:
+        generated_pack_config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(generated_pack_config_path, 'w') as outfile:
             with open(generated_config_path) as infile:
                 outfile.write(infile.read())
             outfile.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
-            with open(defaultpack_configPath) as infile:
-                outfile.write(infile.read())
-            outfile.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
-            with open(pack_configpath) as infile:
+            with open(pack_config_path) as infile:
                 outfile.write(infile.read())
 
-        with open(generatedpack_configPath, 'r') as f:
+        with open(generated_pack_config_path, 'r') as f:
             pack_config = yaml.load(f, Loader)
+
+        pack_config == {**pack_config, **pack_meta_config}
 
         output_base = Path(pack_config.get('output') or 'modpacks', pack).resolve()
         if args.debug:
             print(yaml.dump(pack_config))
 
         pack_name = pack_config.get('name' or pack)
-        download_optional = pack_config.get("optionals", False)
-        game_version = pack_config.get("mc_version", "1.10.2")
-        forge_version = pack_config.get("forge", "recommended")
-        default_release_types = pack_config.get('release_type', (RLType.Release, RLType.Beta, RLType.Alpha))
+        # download_optional = pack_config.get("optionals", False) # TODO: curse specific
+        mc_version = pack_config.get("mc_version")
+        assert mc_version, "no Minecraft version defined"
+        forge_version = pack_config.get("forge")
+        assert forge_version, "no Forge version defined"
+        # default_release_types = pack_config.get('release_type') # TODO: curse specific
+
+        provider_settings = pack_config.get('provider_settings', {})
+        provider_args = {'debug': args.debug, 'default_mc_version': mc_version, 'provider_settings': provider_settings}
 
         providers: List[BaseProvider] = []
-        providers.append(DirectProvider())
-        providers.append(LocalProvider(Path(output_base, 'local')))
-        curse_args = (args.debug, download_optional,
-                      game_version, default_release_types)
-        providers.append(CurseProvider(*curse_args))
-        providers.append(MavenProvider())
-        providers.append(GithubProvider())
-        providers.append(JenkinsProvider())
-
-        # TODO: provider.apply_config()
-
+        providers.append(CurseProvider(**provider_args))
+        providers.append(DirectProvider(**provider_args))
+        providers.append(LocalProvider(**provider_args))
+        providers.append(MavenProvider(**provider_args))
+        providers.append(GithubProvider(**provider_args))
+        providers.append(JenkinsProvider(**provider_args))
 
         print('output base {}'.format(output_base))
         mods = pack_config.get("mods", [])
@@ -155,10 +152,18 @@ def run():
                 entry = provider.convert(mod)
                 entries.append(dict(entry))
         try:
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.apply_defaults(entry)
+
+            for entry in entries:
+                provider: BaseProvider = provider_map[entry['type']]
+                provider.prepare_dependencies(entry)
+
             remove = []
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
-                if not provider.prepare_dependencies(entry): # TODO: rename to filter - something
+                if not provider.validate(entry):
                     remove.append(entry)
             remove_dump = yaml.dump(remove).replace('\n', '\n    ')
             print(f"remove: \n    {remove_dump}")
@@ -200,7 +205,7 @@ def run():
             loader_path = Path(output_base, 'loaders')
             rmtree(str(loader_path.resolve()), ignore_errors=True)
             loader_path.mkdir(parents=True, exist_ok=True)
-            forge_entry = get_forge(forge_version, game_version, loader_path, Path(cache_dir, 'forge'), args.debug)
+            forge_entry = get_forge(forge_version, mc_version, loader_path, Path(cache_dir, 'forge'), args.debug)
             entries.append(forge_entry)
             
             # resolve full path

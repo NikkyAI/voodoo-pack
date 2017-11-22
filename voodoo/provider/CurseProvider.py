@@ -10,13 +10,15 @@ __all__ = ['CurseProvider']
 
 
 class CurseProvider(BaseProvider):
+    """
+    Gets mods and their dependencies from curse
+    """
 
-    optional = ("addon_id", "name", "mc_version", "release_type",
-                "no_required", "no_optional")
-    required = ()
+    # optional = ("addon_id", "name", "mc_version", "release_type", "no_required", "no_optional")
+    required_attributes = ()
     typ = 'curse'
 
-    file_cache = {}
+    __file_cache = {}
 
     def from_str(self, data: str):
         return {'name': data, 'type': CurseProvider.typ}
@@ -29,28 +31,34 @@ class CurseProvider(BaseProvider):
         int: from_int
     }
 
-    def __init__(self, debug, download_optional, default_game_version, default_release_types):
-        super()
-        self.debug = debug
+    optional = False
+    release_types = [str(RLType.Release), str(RLType.Beta)]
+
+    def __init__(self, *args, **kwargs): # optional, default_release_types,
+        super().__init__(*args, **kwargs)
         self.addon_data = self.get_addon_data()
-        self.download_optional = download_optional
-        self.default_game_version = default_game_version
-        self.default_release_types = default_release_types
+        # self.download_optional = optional
+        # self.default_release_types = default_release_types
         print("CurseProvider .ctor")
 
     def match_dict(self, entry: dict):
         # print(f"checking for name or addon_id in {entry}")
         return 'addon_id' in entry or 'name' in entry
 
-    def prepare_dependencies(self, entry: dict) -> bool:
+    def prepare_dependencies(self, entry: dict):
         # get addon_id, file_id
         param = {k: entry[k] for k in (
-            'addon_id', 'name', 'mc_version', 'version', 'release_type') if k in entry}
+            'addon_id', 'name', 'mc_version', 'version', 'release_types') if k in entry}
         addon_id, file_id, file_name = self.find_file(**param)
         entry['addon_id'] = addon_id
-        if file_id < 0:
-            return False
         entry['file_id'] = file_id
+        if 'file_name' not in entry:
+            entry['file_name'] = file_name
+
+    def validate(self, entry: dict) -> bool:
+        file_id = entry.get('file_id')
+        if not file_id or file_id < 0:
+            return False
         return True
 
     def resolve_dependencies(self, entry: dict, entries: List[dict]):
@@ -90,9 +98,9 @@ class CurseProvider(BaseProvider):
                     break
 
             else:
-                if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and self.download_optional):
+                if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and entry.get('optional')):
                     dep_addon_id, dep_file_id, file_name = self.find_file(
-                        addon_id=dep_addon_id, mc_version=self.default_game_version)
+                        addon_id=dep_addon_id, mc_version=entry.get('default_mc_version'))
                     dep_addon = self.get_add_on_file(dep_addon_id, dep_file_id)
                     if dep_addon_id > 0 and dep_file_id > 0:
                         dep_addon = self.get_add_on(dep_addon_id)
@@ -200,9 +208,9 @@ class CurseProvider(BaseProvider):
         return None
 
     def get_add_on(self, addon_id: int) -> Dict[str, Any]:
-        addon_files = self.file_cache.get(id, None)
+        addon_files = self.__file_cache.get(id, None)
         if not addon_files:
-            self.file_cache[id] = {}
+            self.__file_cache[id] = {}
         addon = next(a for a in self.addon_data if a['id'] == addon_id)
         return addon
         if self.debug:
@@ -214,7 +222,7 @@ class CurseProvider(BaseProvider):
             return addon
 
     def get_add_on_file(self, addon_id: int, file_id: int) -> Dict[str, Any]:
-        addon_files = self.file_cache.get(id, None)
+        addon_files = self.__file_cache.get(id, None)
         if addon_files:
             file = addon_files.get(file_id, None)
             if file:
@@ -234,10 +242,10 @@ class CurseProvider(BaseProvider):
             return file
 
     def get_add_on_all_files(self, addon_id: int) -> List[Dict[str, Any]]:
-        addon_files = self.file_cache.get(id, None)
+        addon_files = self.__file_cache.get(id, None)
         if not addon_files:
-            self.file_cache[id] = {}
-            addon_files = self.file_cache.get(id, None)
+            self.__file_cache[id] = {}
+            addon_files = self.__file_cache.get(id, None)
         if self.debug:
             print(
                 f'get https://cursemeta.nikky.moe/api/addon/{addon_id}/files')
@@ -251,22 +259,19 @@ class CurseProvider(BaseProvider):
                 addon_files[file['id']] = file
             return files
 
-    # TODO: refactor these
-    defaultGameVersion = "1.10.2"
-
     def find_file(self, mc_version: str = None,
                   name: str = None,
                   version: str = None,
-                  release_type: List[Any] = None,
+                  release_types: List[Any] = None,
                   addon_id: int = None
                   ) -> Tuple[int, int, str]:
 
-        if not release_type:
-            release_type = self.default_release_types
-        release_type = list(release_type)
-        release_type = [RLType.get(t) for t in release_type]
+        if not release_types:
+            release_types = self.release_types
+        release_types = list(release_types)
+        release_types = [RLType.get(t) for t in release_types]
         if not mc_version:
-            mc_version = self.default_game_version
+            mc_version = self.default_mc_version
 
         addon = {}
 
@@ -291,7 +296,7 @@ class CurseProvider(BaseProvider):
         files = [f for f in files
                  if version and version in f['fileName'] or not version
                  and mc_version in f['gameVersion']
-                 and RLType.get(f['releaseType']) in release_type]
+                 and RLType.get(f['releaseType']) in release_types]
         if files:
             # sort by date
             files.sort(key=lambda x: x['fileDate'], reverse=True)

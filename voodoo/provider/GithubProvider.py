@@ -4,11 +4,11 @@ __all__ = ['GithubProvider']
 
 
 class GithubProvider(BaseProvider):
+    """
+    Github Releases
+    """
 
-    optional = ('tag')
-    required = ('user', 'repo')
+    # optional = ('tag')
+    required_attributes = ('user', 'repo')
     typ = 'github'
 
-    def __init__(self):
-        super()
-        print("GithubProvider .ctor")

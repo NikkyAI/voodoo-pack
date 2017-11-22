@@ -10,16 +10,17 @@ __all__ = ['JenkinsProvider']
 
 
 class JenkinsProvider(BaseProvider):
-    optional = ('build_number', 'file_name_regex')
-    required = ('jenkins_url', 'job')
+    """
+    Downloads Artifacts from jenkins jobs
+    """
+    
+    # optional = ('build_number', 'file_name_regex')
+    required_attributes = ('jenkins_url', 'job')
     typ = 'jenkins'
 
-    def __init__(self):
-        super()
-        self.servers: Dict[Jenkins] = dict()
-        print("JenkinsProvider .ctor")
+    __servers: Dict[str, Jenkins] = {}
 
-    def prepare_dependencies(self, entry: dict) -> bool:
+    def validate(self, entry: dict) -> bool:
         return True
 
     def fill_information(self, entry: dict):
@@ -32,6 +33,7 @@ class JenkinsProvider(BaseProvider):
         job_name = entry['job']
         file_name_regex = entry['file_name_regex']
         server = self.get_server(jenkins_url)
+        print(f'[{self.typ.upper()}] get job {job_name}')
         job = server.get_job(job_name)
         if 'build_number' not in entry:
             build_number = job.get_last_stable_buildnumber()
@@ -53,8 +55,9 @@ class JenkinsProvider(BaseProvider):
                 Path(entry['cache_base'], *job_name.split('/')))
 
     def get_server(self, url: str) -> Jenkins:
-        server = self.servers.get(url)
+        server = self.__servers.get(url)
         if not server:
+            print(f'[{self.typ.upper()}] get server {url}')
             server = Jenkins(url)
-            self.servers[url] = server
+            self.__servers[url] = server
         return server

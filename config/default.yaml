@@ -1,6 +1,29 @@
-defaults:
-    # TODO: local
-    # TODO:jenkins
+# global defaults
+
+global_defaults:
+  modpack: &modpack
+    enabled: true
+
+output: modpacks
+
+# pack defaults
+
+forge: recommended
+mc_version: 1.12.2
+
+# provider settings
+provider_settings:
+  curse: &curse_settings
+    optional: false
+    release_types:
+      - Release
+      - Beta
+
+  local: &local_settings
+    folder: local
+
+
+pack_defaults:
 
     curse: &direct
         type: direct
@@ -11,10 +34,8 @@ defaults:
 
     curse: &curse
         type: curse
-        # release_type: [Release, Beta] # default_release_types
         # name: null
         # id: null
-        # mc_version: '1.12.2' # ? # defaultGameversion
         # package_type: mod
         # path: mods
         
@@ -68,5 +89,3 @@ defaults:
         selected: true
         # description: null
         # recommendation: "starred" or "avoid"
-
-optionals: false

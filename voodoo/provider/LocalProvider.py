@@ -8,15 +8,16 @@ __all__ = ['LocalProvider']
 
 
 class LocalProvider(BaseProvider):
+    """
+    provieds copies of local files
+    """
 
-    optional = ('file_name')
-    required = ('file')
+    # optional = ('file_name')
+    required_attributes = ('file')
+
     typ = 'local'
 
-    def __init__(self, local_base: Path):
-        super()
-        self.local_base = local_base
-        print("LocalProvider .ctor")
+    local_base = 'local'
 
     def fill_information(self, entry: dict):
         if not 'name' in entry:
@@ -25,7 +26,8 @@ class LocalProvider(BaseProvider):
             entry['file_name'] = Path(entry['file']).resolve().name
         super().fill_information(entry)
 
-    def prepare_dependencies(self, entry: dict) -> bool:
+    def validate(self, entry: dict) -> bool:
+        # TODO: check if file exists
         return True
 
     def write_direct_url(self, entry: dict, src_path: Path):

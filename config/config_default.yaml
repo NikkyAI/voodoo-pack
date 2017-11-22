@@ -1,5 +1,0 @@
-default:
-  modpack: &modpack
-    enabled: true
-
-output: modpacks

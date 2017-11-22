@@ -11,16 +11,14 @@ __all__ = ['DirectProvider']
 
 
 class DirectProvider(BaseProvider):
-
-    optional = ('file_name',)
-    required = ('url', 'path', 'package_type')
+    """
+    Donloads files form urls directly
+    """
+    # optional = ('file_name',)
+    required_attributes = ('url', 'path', 'package_type')
     typ = 'direct'
-
-    def __init__(self):
-        super()
-        print("DirectProvider .ctor")
     
-    def prepare_dependencies(self, entry: dict) -> bool:
+    def validate(self, entry: dict) -> bool:
         return True
     
     def fill_information(self, entry: dict):
@@ -54,14 +52,13 @@ class DirectProvider(BaseProvider):
         path = Path(src_path, entry['path'])
         url = entry['url']
 
-        # TODO: caching
         # look for files in cache
         if dep_cache_dir.is_dir():
             # File is cached
             cached_files = [f for f in dep_cache_dir.iterdir()]
             if len(cached_files) >= 1:
                 target_file = path / cached_files[0].name
-                print(f"[{entry['name']} {target_file.name} (cached)")
+                print(f"[{entry['name']}] {target_file.name} (cached)")
                 path.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(str(cached_files[0]), str(target_file))
 

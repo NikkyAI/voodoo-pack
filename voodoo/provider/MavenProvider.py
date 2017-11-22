@@ -5,10 +5,6 @@ __all__ = ['MavenProvider']
 
 class MavenProvider(BaseProvider):
 
-    optional = ()
-    required = ('remoteRepository', 'group', 'artifact', 'version')
+    # optional = ()
+    required_attributes = ('remoteRepository', 'group', 'artifact', 'version')
     typ = 'mvn'
-
-    def __init__(self):
-        super()
-        print("MavenProvider .ctor")

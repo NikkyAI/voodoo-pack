@@ -73,16 +73,22 @@ name: Example pack
 
 mc_version: "1.12.2"
 
-optionals: true
-# this adds also optiona dependencies from curse and other sources
-
-forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
+forge: "latest" # `version`(-recommended /-latest) or branch-name
 
 urls: true
-release_type:
-  - Release
-  - Beta
-  - Alpha
+
+provider_settings:
+  curse:
+    <<: *curse_settings
+    optional: false
+    release_types:
+      - Release
+      - Beta
+      - Alpha
+
+  local:
+    <<: *local_settings
+    folder: local
 
 asie_mod_archive: &asie_mod_archive: https://asie.pl/files/mods/
 
@@ -201,13 +207,28 @@ TODO:
 
 ###### dict
 
-start the entry with the merge key `<<:` referencing anchors for the different mod types
+start the entry with the merge key `<<:` referencing anchors for the different entry types
 
 ```yaml
 - <<: *curse
   name: JourneyMap
   mc_version: 1.9
 ```
+##### general properties
+
+these keys are set and can be overriden on every entry
+ALL of them are optional and will be inferred from other values or the providers
+
+keys: 
+
+- `path`: str \
+  folder that the file will be saved to \
+  - default: `mods`
+- `package_type`: str
+  - values
+    - `mod`
+    - TODO: add support for others eg. worlds, texturepacks
+- `name`: str
 
 ##### types
 
@@ -232,14 +253,14 @@ keys:
 - `version`: str
   - optional
   - checks if `version` is in the filename
-- `release_type` List[str]
+- `release_types` List[str]
   - optional
   - values:
     - `Release`
     - `Beta`
     - `Alpha`
 
-`name` or `project_id` are required
+`name` or `addon_id` are required
 
 ###### jenkins
 

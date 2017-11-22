@@ -2,13 +2,18 @@
 name: Base Pack
 mc_version: "1.12.2"
 
-optionals: false
+forge: "latest" # `version`(-recommended /-latest) or branch-name
 
-forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
-
-urls: true
-release_type:
-  - Release
+provider_settings:
+  curse:
+    <<: *curse_settings
+    optional: false
+    release_types:
+      - Release
+  
+  local:
+    <<: *local_settings
+    folder: local
 
 asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
 
