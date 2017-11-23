@@ -146,7 +146,8 @@ class Voodoo:
         urls = pack_config.get('urls', True)
         pack_name = pack_config.get('name' or pack_base)
         mc_version = pack_config.get('mc_version')
-        mc_version = list(mc_version)
+        if not isinstance(mc_version, list):
+            mc_version = [mc_version]
         mc_version = [str(v) for v in mc_version]
         assert mc_version, 'no Minecraft version defined'
         forge_version = pack_config.get('forge')
