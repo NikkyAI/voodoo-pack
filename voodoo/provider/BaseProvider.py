@@ -1,9 +1,11 @@
+import inspect
 import json
 import sys
 from pathlib import Path
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 from urllib.parse import unquote
-import inspect
+
+import yaml
 
 __all__ = ['BaseProvider']
 
@@ -30,7 +32,8 @@ class BaseProvider:
     def __init__(self, *args, **kwargs):
         if type(self) is BaseProvider:
             return
-        print(f'{self.typ.upper()} Provider .ctor')
+        if self.debug:
+            print(f'{self.typ.upper()} Provider .ctor')
         attribute_keys = ['debug', 'default_mc_version']
         for attribute_key in attribute_keys:
             if attribute_key in kwargs:
@@ -49,16 +52,29 @@ class BaseProvider:
         base_keys = [a[0] for a in base_attributes if not(a[0].startswith('_'))]
         attribute_keys = list(set(attribute_keys) - set(base_keys))
 
+        path = Path(kwargs['data_path'], 'defaults.yaml')
+        if path.is_dir():
+            path.rmdir()
+        global_defaults = {}
+        if path.exists():
+            with open(path, 'r') as stream:
+                try:
+                    global_defaults = yaml.load(stream)
+                except yaml.YAMLError as exc:
+                    print(exc)
+                    global_defaults = {}
+        # get all default values
+        global_defaults[self.typ] = {k: getattr(self, k) for k in attribute_keys}
+        with open(path, 'w') as outfile:
+            yaml.dump(global_defaults, outfile, default_flow_style=False)
+
+        # write provider settings overrides to self
         for attribute_key in attribute_keys:
             if attribute_key in provider_settings:
                 value = provider_settings.get(attribute_key)
                 if self.debug:
                     print(f'setting {attribute_key}, value={value}')
                 setattr(self, attribute_key, provider_settings[attribute_key])
-
-        self.defaults = {k: getattr(self, k) for k in attribute_keys}
-        if self.defaults or self.debug:
-            print(f'defaults = {self.defaults}')
 
     def apply_defaults(self, entry: dict):
         for key, value in self.defaults.items():

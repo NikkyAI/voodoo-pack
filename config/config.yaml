@@ -1,13 +1,13 @@
 output: modpacks
+temp_path: build
 
 modpacks: # TODO: turn into list
-  "example_pack": 
+  "example_pack":
     <<: *modpack
     name: Example pack
-    enabled: false
   'resource_test':
     <<: *modpack
-  "testpack": 
+  "testpack":
     <<: *modpack
     name: base pack
     enabled: false

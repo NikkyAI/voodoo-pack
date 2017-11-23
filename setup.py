@@ -3,13 +3,13 @@ from subzero import setup, Executable
 
 setup(
     name='voodoo',
-    version='0.3',
+    version='0.4',
     description='Automated modpack builder utility',
     url='https://github.com/NikkyAI/voodoo-pack',
     author='NikkyAi',
     author_email='root@nikky.moe',
     license='LGPL',
-    packages=['voodoo'],
+    packages=['voodoo', 'voodoo.provider'],
     install_requires=[
         'appdirs',
         'requests',
@@ -20,7 +20,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'voodoo=voodoo.__main__:main',
+            'voodoo=voodoo.voodoo:main',
         ],
     },
     options={

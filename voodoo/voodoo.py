@@ -1,8 +1,8 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
 import argparse
-import codecs
 import sys
+import io
 import traceback
 from pathlib import Path
 from shutil import rmtree
@@ -18,101 +18,143 @@ from .loader import Loader
 from .provider import *
 
 
-def run():
-    print('using encoding {}'.format(sys.stdout.encoding))
-
-    parser = argparse.ArgumentParser(description="Download mods from curseforge and other sources")
-    parser.add_argument("config", nargs="?", default="voodoo.yaml", help="config file")
-    parser.add_argument("--auth", help="auth file for github login")
-    parser.add_argument("--username_github", help="github login")
-    parser.add_argument("--password_github", help="github password")
-    parser.add_argument("--debug", dest="debug",
-                        action="store_true", help="display debug info")
+def main():  # TODO: move to __main__
+    parser = argparse.ArgumentParser(
+        description='Download mods from curseforge and other sources')
+    parser.add_argument('packs', nargs='*', default=[], help='packs')
+    parser.add_argument(
+        '-c', '--config', default='config/config.yaml', help='config file')
+    # parser.add_argument('--auth', help='auth file for github login')
+    # parser.add_argument('--username_github', help='github login')
+    # parser.add_argument('--password_github', help='github password')
+    parser.add_argument('--debug', dest='debug',
+                        action='store_true', help='display debug info')
     args, unknown = parser.parse_known_args()
+    args = vars(args)
 
-    config_path = Path(args.config).resolve()
+    voodoo = Voodoo(**args)
+    voodoo.process_packs()
 
-    config_dir = config_path.parent
 
-    config = {}
-    config_suffix = config_path.suffix
-    if config_suffix == '.yaml':
-        default_config_path = config_dir / "default.yaml"
-        generated_config_path = config_dir / 'build' / 'generated_config.yaml'
-        generated_config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(generated_config_path, 'w') as outfile:
+class Voodoo:
+    forge_data = None
+
+    def __init__(self, config, debug, packs):
+        self.debug = debug
+        if self.debug:
+            print('using encoding {}'.format(sys.stdout.encoding))
+        self.config_path = Path(config).resolve()
+        self.packs = packs
+
+        self.cache_dir = appdirs.AppDirs(
+            appname='voodoo', appauthor='nikky').user_cache_dir
+
+        # parse config
+        config_dir = self.config_path.parent
+        self.config = {}
+
+        config_suffix = self.config_path.suffix
+        if config_suffix == '.yaml':
+            default_config_path = config_dir / 'default.yaml'
+            config_dir.mkdir(parents=True, exist_ok=True)
+            output = io.StringIO()
             with open(default_config_path) as infile:
-                outfile.write(infile.read())
-            outfile.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
-            with open(config_path) as infile:
-                outfile.write(infile.read())
+                output.write(infile.read())
+            output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
+            with open(self.config_path) as infile:
+                output.write(infile.read())
+            self.config_str = output.getvalue()
+            output.close()
 
-        with open(generated_config_path, 'r') as f:
-            config = yaml.load(f, Loader)
-        print(yaml.dump(config))
+            self.config = yaml.load(self.config_str, Loader)
+            if self.debug:
+                print(yaml.dump(self.config))
+            self.config_path = config_dir
+            temp_path = self.config.get('temp_path')
+            if temp_path:
+                temp_path = Path(self.config_path, temp_path)
+                temp_path.mkdir(parents=True, exist_ok=True)
+                temp_path = Path(temp_path, 'generated_config.yaml')
+                with open(temp_path, 'w') as outfile:
+                    outfile.write(self.config_str)
+        else:
+            print('requires yaml config file')
+            exit(-1)
 
-    auth_file = args.auth or config.get('authentication', None)
+        # auth_file = args.auth or config.get('authentication', None)
+        # auth = config.get('authentication', {})
+        # if args.username_github and args.password_github:
+        #     auth_github = {'username': args.username, 'password': args.password}
+        #     auth['github'] = auth_github
 
-    auth = config.get('authentication', {})
-    if args.username_github and args.password_github:
-        auth_github = {'username': args.username, 'password': args.password}
-        auth['github'] = auth_github
+    def process_packs(self):
+        if self.packs:
+            for pack in self.packs:
+                meta_config = self.config['modpacks'].get(pack, {})
+                self.process_pack(
+                    pack_base=pack, meta_config=meta_config, disable_skip=True)
+        else:
+            for pack, meta_config in self.config['modpacks'].items():
+                self.process_pack(pack_base=pack, meta_config=meta_config)
 
+    def process_pack(self, pack_base: str, meta_config: dict = {}, disable_skip: bool = False):
+        if not meta_config.get('enabled', True) and not disable_skip:
+            print(f'skipped {pack_base}')
+            return
+        else:
+            print(f'processing {pack_base}')
 
-    output_dir = Path(config.get('output', 'modpacks'))
-    output_dir.mkdir(parents=True, exist_ok=True)
-    urls = config.get('urls', True)
+        pack_config_base = Path(self.config_path, self.config.get('packs'))
+        pack_config_path = pack_config_base / f'{pack_base}.yaml'
 
-    # TODO: move into CurseProvider .ctor
-    # addonData = get_addon_data()
-    # print("data len: {}".format(len(addonData) / (1024.0 * 1024.0)))
-    # modnames = [p['name'] for p in addonData]  # if p["PackageType"] == 6]
-    # with codecs.open('./modlist.txt', "w", encoding='utf8') as modlist:
-    #     modlist.write("\n".join(modnames))
+        output = io.StringIO()
+        output.write(self.config_str)
+        output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
+        with open(pack_config_path) as infile:
+            output.write(infile.read())
+        config_str = output.getvalue()
+        output.close()
+        try:
+            pack_config = yaml.load(config_str, Loader)
+        except yaml.YAMLError as exc:
+            print('failed loading yaml')
+            temp_path = Path(self.config_path, 'fail')
+            temp_path.mkdir(parents=True, exist_ok=True)
+            temp_path = temp_path / f'{pack_base}.yaml'
+            with open(temp_path, 'w') as outfile:
+                outfile.write(config_str)
+            print(f'written failing yaml to {temp_path} \nfailed parsing config {exc}')
+            exit(-1)
+        # apply config overrides
+        pack_config == {**pack_config, **meta_config}
 
+        temp_path = pack_config.get('temp_path')
+        if temp_path:
+            temp_path = Path(self.config_path, temp_path)
+            temp_path.mkdir(parents=True, exist_ok=True)
+            merged_config_path = temp_path / f'{pack_base}.yaml'
+            with open(merged_config_path, 'w') as outfile:
+                outfile.write(config_str)
 
-
-
-    print(f"config: {config}")
-    for pack, pack_meta_config in config["modpacks"].items():
-        print(f"name: '{pack}'")
-        if not pack_meta_config['enabled']:
-            print("skipped")
-            continue
-        print(yaml.dump(pack_meta_config))
-        pack_base = pack  # TODO: file base
-        pack_config_path = config_dir / 'packs' / f"{pack_base}.yaml"
-        generated_pack_config_path = config_dir / "build" / \
-            f"{pack_base}.yaml"  # TODO: make sure directory exists
-        generated_pack_config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(generated_pack_config_path, 'w') as outfile:
-            with open(generated_config_path) as infile:
-                outfile.write(infile.read())
-            outfile.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
-            with open(pack_config_path) as infile:
-                outfile.write(infile.read())
-
-        with open(generated_pack_config_path, 'r') as f:
-            pack_config = yaml.load(f, Loader)
-
-        pack_config == {**pack_config, **pack_meta_config}
-
-        output_base = Path(pack_config.get('output') or 'modpacks', pack).resolve()
-        if args.debug:
+        output_path = Path(pack_config.get('output') or 'modpacks', pack_base)
+        data_path = Path(pack_config.get('data_path', 'data'))
+        assert not data_path.is_absolute(), 'data_path has to be relative to the output path'
+        data_path = Path(output_path, data_path)
+        data_path.mkdir(parents=True, exist_ok=True)
+        if self.debug:
             print(yaml.dump(pack_config))
-
-        pack_name = pack_config.get('name' or pack)
-        # download_optional = pack_config.get("optionals", False) # TODO: curse specific
-        mc_version = pack_config.get("mc_version")
+        urls = pack_config.get('urls', True)
+        pack_name = pack_config.get('name' or pack_base)
+        mc_version = pack_config.get('mc_version')
         mc_version = list(mc_version)
         mc_version = [str(v) for v in mc_version]
-        assert mc_version, "no Minecraft version defined"
-        forge_version = pack_config.get("forge")
-        assert forge_version, "no Forge version defined"
-        # default_release_types = pack_config.get('release_type') # TODO: curse specific
+        assert mc_version, 'no Minecraft version defined'
+        forge_version = pack_config.get('forge')
+        assert forge_version, 'no Forge version defined'
 
         provider_settings = pack_config.get('provider_settings', {})
-        provider_args = {'debug': args.debug, 'default_mc_version': mc_version, 'provider_settings': provider_settings}
+        provider_args = {'debug': self.debug, 'output_path': output_path, 'data_path': data_path,
+                         'default_mc_version': mc_version, 'provider_settings': provider_settings}
 
         providers: List[BaseProvider] = []
         providers.append(CurseProvider(**provider_args))
@@ -122,8 +164,8 @@ def run():
         providers.append(GithubProvider(**provider_args))
         providers.append(JenkinsProvider(**provider_args))
 
-        print('output base {}'.format(output_base))
-        mods = pack_config.get("mods", [])
+        print(f'output path {output_path}')
+        mods = pack_config.get('mods', [])
 
         provider_map = {p.typ: p for p in providers}
 
@@ -139,12 +181,14 @@ def run():
             for entry in entries:
                 missing = set(keys) - set(entry.keys())
                 if missing:
-                    print(f"[{check_name}] missing {', '.join(missing)} from \n\t{entry}", file=sys.stderr)
+                    print(
+                        f"[{check_name}] missing {', '.join(missing)} from \n\t{entry}", file=sys.stderr)
                     fail = True
-                    entry_id = entry.get('name') or entry.get('url') or str(entry)
+                    entry_id = entry.get('name') or entry.get(
+                        'url') or str(entry)
                     all_missing[entry_id] = missing
-            if fail:
-                raise KeyError(all_missing)
+            assert not fail, f'missing values'
+            # raise KeyError(all_missing)
 
         entries = []
         for mod in mods:
@@ -167,12 +211,14 @@ def run():
                 provider: BaseProvider = provider_map[entry['type']]
                 if not provider.validate(entry):
                     remove.append(entry)
-            remove_dump = yaml.dump(remove).replace('\n', '\n    ')
-            print(f"remove: \n    {remove_dump}")
+            if remove or self.debug:
+                remove_dump = '\n    ' + \
+                    yaml.dump(remove).replace('\n', '\n    ')
+                print(f'remove: {remove_dump}')
             for rem in remove:
                 entries.remove(rem)
 
-            # print(f"entries: \n{yaml.dump(entries)}")
+            # print(f'entries: \n{yaml.dump(entries)}')
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -183,7 +229,7 @@ def run():
                 provider.resolve_feature_dependencies(entry, entries)
 
             # if args.debug:
-                # print(f"resolve dep entries: \n{yaml.dump(entries)}")
+                # print(f'resolve dep entries: \n{yaml.dump(entries)}')
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -191,25 +237,24 @@ def run():
 
             assert_dict('fill_information', ('name', 'package_type'), entries)
 
-            # print(f"fill info entries: \n{yaml.dump(entries)}")
-            generate_graph(entries, output_base)
-
-            cache_dir = appdirs.AppDirs(appname="voodoo", appauthor="nikky").user_cache_dir
+            # print(f'fill info entries: \n{yaml.dump(entries)}')
+            generate_graph(entries, path=data_path, pack_name=pack_name)
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
-                provider.prepare_download(entry, Path(cache_dir, provider.typ))
+                provider.prepare_download(
+                    entry, Path(self.cache_dir, provider.typ))
 
-            assert_dict('prepare_download', ('url', 'file_name', 'cache_path'), entries)
+            assert_dict('prepare_download',
+                        ('url', 'file_name', 'cache_path'), entries)
 
-            src_path = Path(output_base, 'src')
-            
-            loader_path = Path(output_base, 'loaders')
-            rmtree(str(loader_path.resolve()), ignore_errors=True)
-            loader_path.mkdir(parents=True, exist_ok=True)
-            forge_entry = get_forge(forge_version, mc_version, loader_path, Path(cache_dir, 'forge'), args.debug)
+            src_path = Path(output_path, 'src')
+
+            forge_entry = self.get_forge(forge_version, mc_version)
+            rmtree(
+                str(Path(output_path, forge_entry['path']).resolve()), ignore_errors=True)
             entries.append(forge_entry)
-            
+
             # resolve full path
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -217,8 +262,8 @@ def run():
 
             assert_dict('resolve_path', ('path', 'file_path'), entries)
 
-            if args.debug:
-                print(f"resolve path entries: \n{yaml.dump(entries)}")
+            if self.debug:
+                print(f'resolve path entries: \n{yaml.dump(entries)}')
 
             # TODO: github, jenkins
 
@@ -237,8 +282,9 @@ def run():
                     provider: BaseProvider = provider_map[entry['type']]
                     provider.write_direct_url(entry, src_path)
 
-            if args.debug:
-                print(f"write urls and features entries: \n{yaml.dump(entries)}")
+            if self.debug:
+                print(
+                    f'write urls and features entries: \n{yaml.dump(entries)}')
 
             print('starting download')
 
@@ -246,70 +292,81 @@ def run():
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.download(entry, src_path)
 
+        # TODO: generate modpack.json
+
         except KeyError as ke:
             tb = traceback.format_exc()
-            if isinstance (ke.args[0], dict):
-                for entry_id, missing_keys in ke.args[0].items():
-                    print(f"{entry_id} \n\tis missing \n\t{', '.join(missing_keys)}")
+            arg = ke.args[0]
+            if isinstance(arg, dict):
+                arg = dict(arg)
+                for entry_id, missing_keys in arg.items():
+                    print(
+                        f"{entry_id} \n\tis missing \n\t{', '.join(missing_keys)}")
             else:
                 print(repr(ke))
                 print(f'KeyError {ke} in')
                 print(entry)
                 print(tb)
+            raise ke
 
+    def get_forge_data(self) -> List[Mapping[str, Any]]:
+        if self.debug:
+            print(
+                f'get http://files.minecraftforge.net/maven/net/minecraftforge/forge/json')
+        r = requests.get(
+            f'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json')
+        r.raise_for_status()
+        global addonData
+        if r.status_code == 200:
+            forge_data = r.json()
+            return forge_data
+        return None
 
-def get_forge_data(debug: bool = False) -> List[Mapping[str, Any]]:
-    if debug:
-        print(f'get http://files.minecraftforge.net/maven/net/minecraftforge/forge/json')
-    r = requests.get(
-        f'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json')
-    r.raise_for_status()
-    global addonData
-    if r.status_code == 200:
-        forge_data = r.json()
-        return forge_data
-    return None
+    def get_forge_url(self, version, mc_version: List[str]) -> (str, str, int):
+        if not self.forge_data:
+            self.forge_data = self.get_forge_data()
+        data = self.forge_data
+        if isinstance(mc_version, list):
+            mc_version = mc_version[0]
+        if isinstance(version, str):
+            version_str = version
+            if version in ('recommended', 'latest'):
+                promo_version = f'{mc_version}-{version}'
+                version = data['promos'].get(promo_version)
+            else:
+                version = data['promos'].get(version_str)
+                if not version:
+                    version = data['branches'].get(version_str)
+                if not version:
+                    version = data['mcversion'].get(version_str)
+                if isinstance(version, list):
+                    version_list = [
+                        v for v in version if data['number'][str(v)]['mcversion'] == mc_version]
+                    if not version_list:
+                        print(f'ERROR: forge searchterm is invalid',
+                              file=sys.stderr)
+                        exit(-1)
+                    version = max(version_list)
 
-def get_forge_url(version, mc_version: List[str], debug: bool = False) -> (str, str, int) :
-    data = get_forge_data(debug)
-    if isinstance(mc_version, list):
-        mc_version = mc_version[0]
-    if isinstance(version, str):
-        version_str = version
-        if version in ('recommended', 'latest'):
-            promo_version = f"{mc_version}-{version}"
-            version = data['promos'].get(promo_version)
-        else:
-            version = data['promos'].get(version_str)
-            if not version:
-                version = data['branches'].get(version_str)
-            if not version:
-                version = data['mcversion'].get(version_str)
-            if isinstance(version, list):
-                # TODO: filter list based on mc_version
-                version_list = [v for v in version if data['number'][str(v)]['mcversion'] == mc_version]
-                if(len(version_list) == 0):
-                    print(f"ERROR: forge searchterm is invalid", file=sys.stderr)
-                    exit(-1)
-                version = max(version_list)
+        webpath = data['webpath']
+        if isinstance(version, int):
+            file_data = data['number'][str(version)]
+            mcversion = file_data['mcversion']
+            forge_version = file_data['version']
+            branch = file_data['branch']
+            longversion = f'{mcversion}-{forge_version}'
+            if branch:
+                longversion = f'{longversion}-{branch}'
+            filename = f'forge-{longversion}-installer.jar'
+            url = f'{webpath}/{longversion}/{filename}'
+            return url, filename, longversion
+        assert isinstance(
+            version, int), 'version should be resolved to buildnumber'
 
-    webpath = data['webpath']
-    if isinstance(version, int):
-        file_data = data['number'][str(version)]
-        mcversion = file_data['mcversion']
-        forge_version = file_data['version']
-        branch = file_data['branch']
-        longversion = f"{mcversion}-{forge_version}"
-        if branch:
-            longversion = f"{longversion}-{branch}"
-        filename = f"forge-{longversion}-installer.jar"
-        url = f"{webpath}/{longversion}/{filename}"
-        return url, filename, longversion
+    def get_forge(self, version, mcversion: List[str]):
+        url, file_name, longversion = self.get_forge_url(version, mcversion)
+        cache_dir = Path(Path(self.cache_dir, 'forge'), str(longversion))
 
-def get_forge(version, mcversion: List[str], path: Path, cache_base: Path, debug: bool = False):
-    url, file_name, longversion = get_forge_url(version, mcversion, debug)
-    cache_dir = Path(cache_base, str(longversion))
-
-    entry = {'type': 'direct', 'cache_path': str(cache_dir), 'url': url, 'file_name': file_name,
-    'path': str(path), 'name': "Minecraft Forge"}
-    return entry
+        entry = {'type': 'direct', 'cache_path': str(cache_dir), 'url': url, 'file_name': file_name,
+                 'path': 'loaders', 'name': 'Minecraft Forge'}
+        return entry

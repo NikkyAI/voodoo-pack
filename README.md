@@ -36,32 +36,105 @@ example:
 `config/config.yaml`
 
 ```yaml
-authentication: auth.yaml
+modpacks: # TODO: turn into list
+  "example_pack":
+    <<: *modpack
+  "testpack":
+    <<: *modpack
+    name: renamed pack
+  "unusedpack":
+    <<: *modpack
+    name: disabled pack
+    enabled: false
 output: modpacks
-modpacks:
-  - magical_mayhem.yaml
 urls: true
 ```
 
-- `authentication`: str \
-  path to a file containing username and password \
-  for `github` \
-  you can set username and password through commandline flags though \
-  and have no passwords saved in plaintext \
-  example: [auth.yaml](config/auth.yaml)
+- `packs`: str \
+  path to the config directory of modpacks
   - optional
-  - default: none
+  - default: `packs/`
+
+- `modpacks`: Dict[str, overrides] \
+  list of modpack names and overrides that will be applied \
+  to the pack config, allows to change versions or override `enabled`
+  - required
+
+following properties can be set in `config.yaml` or `{pack_name}.yaml` **and may be overridden**
+
+- `enabled`: bool \
+  skips the pack when set to `false`
+  - optional
+  - default: `true`
+
 - `output`: str \
   path to the output folder for modpacks
   - optional
   - default: `modpacks/`
-- `modpacks`: List[str] \
-  list of Paths to modpack config files relative to the parent folder of the config file
-  - required
-- urls: bool \
-  enable saving .url.txt files next to the mod jars
+
+- `data_path`: str \
+  path to the data dump directory for each pack \
+  is used for dependency graphs, info about defaults etc..
   - optional
-  - default: `false`
+  - default: `data/`
+
+- `temp_path`: str \
+  path to the merged configs folder \
+  will not be written if value is `null` or `false`
+  - optional
+  - default: `null`
+
+- `urls`: bool \
+  enable saving .url.txt files next to all files that can be downloaded directly
+  - optional
+  - default: `true`
+
+- `mc_version`: List[str] or str \
+  list of one or more minecraft versions that will be used by eg. curse and forge to find the correct files
+  - required
+  - default: `1.12.2`
+
+- `forge`: str or int \
+  forge version \
+  settings other than `recommended`, `latest` or a build_number \
+  are possible but not recommended
+  - optional
+  - default: `recommended`
+  - values
+    - `recommended`
+    - `latest`
+    - build_number \
+      eg: `2491`
+    - branch-name
+    - version
+    - promo
+
+- `provider_settings` \
+    see generated file `defaults.yaml` in the data directory
+
+  - `curse` \
+    - `optional`: bool \
+      adds optional addons to the modpack when resolving dependencies
+      - default: `false`
+
+    - `release_types`: List[str] \
+      configures which release types of files are being accepted
+      - default: `[Release, Beta]`
+
+    - `meta_url`: str \
+      base url of the used cursemeta instance \
+      host your own: https://github.com/NikkyAI/cursemeta
+      - default: `https://cursemeta.nikky.moe`
+
+    - `dump_data`: bool \
+      enable dumping addon data into the data directory
+      - default: `true`
+
+  - `local`
+    - `folder`: str \
+      base directory that local files are loaded from \
+      if the file is not specified with a absolute path
+      - default: `local`
 
 ### modpack config files
 

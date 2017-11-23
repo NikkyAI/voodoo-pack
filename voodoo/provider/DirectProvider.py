@@ -17,10 +17,10 @@ class DirectProvider(BaseProvider):
     # optional = ('file_name',)
     required_attributes = ('url', 'path', 'package_type')
     typ = 'direct'
-    
+
     def validate(self, entry: dict) -> bool:
         return True
-    
+
     def fill_information(self, entry: dict):
         url = entry['url']
         parsed = urlparse(url)
@@ -28,7 +28,7 @@ class DirectProvider(BaseProvider):
         if 'file_name' not in entry:
             entry['file_name'] = url_path.name
         if 'name' not in entry:
-            entry['name'] =  entry['file_name'].rsplit('.', 1)[0]
+            entry['name'] = entry['file_name'].rsplit('.', 1)[0]
 
     def prepare_download(self, entry: dict, cache_base: Path):
         url = entry['url']
@@ -44,24 +44,22 @@ class DirectProvider(BaseProvider):
 
     def download(self, entry: dict, src_path: Path):
         url = entry['url']
-        print(f'downloading {url}')
-        # cache_path_curse / str(id) / str(file_id)
+        if self.debug:
+            print(f'downloading {url}')
         dep_cache_dir = Path(entry['cache_path'])
 
         file_name = entry['file_name']
-        path = Path(src_path, entry['path'])
+        file_path = Path(src_path, entry['file_path'])
+        Path(file_path.parent).mkdir(parents=True, exist_ok=True)
         url = entry['url']
 
         # look for files in cache
         if dep_cache_dir.is_dir():
             # File is cached
             cached_files = [f for f in dep_cache_dir.iterdir()]
-            if len(cached_files) >= 1:
-                target_file = path / cached_files[0].name
-                print(f"[{entry['name']}] {target_file.name} (cached)")
-                path.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(str(cached_files[0]), str(target_file))
-
+            if cached_files:
+                print(f"[{entry['name']}] {cached_files[0].name} (cached)")
+                shutil.copyfile(str(cached_files[0]), str(file_path))
                 return
 
         # File is not cached and needs to be downloaded
@@ -71,10 +69,10 @@ class DirectProvider(BaseProvider):
             file_response = requests.get(source, stream=True)
 
         # write jarfile
-        path = path / file_name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(str(path), "wb") as mod_file:
+        with open(file_path, "wb") as mod_file:
             mod_file.write(file_response.content)
+
+        print(f"[{entry['name']}] {cached_files[0].name} (downloaded)")
 
         # Try to add file to cache.
         if not dep_cache_dir.exists():

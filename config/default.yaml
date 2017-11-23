@@ -1,91 +1,95 @@
 # global defaults
 
-global_defaults:
+defaults:
   modpack: &modpack
     enabled: true
 
-output: modpacks
-
 # pack defaults
+enabled: true
+output: modpacks
+packs: packs
+pata_path: data
+temp_path: null
 
+urls: true
+
+mc_version: 1.12.2 # TODO: get latest version from forge data
 forge: recommended
-mc_version: 1.12.2
 
 # provider settings
 provider_settings:
   curse: &curse_settings
     optional: false
     release_types:
-      - Release
-      - Beta
+     - Release
+     - Beta
+    meta_url: https://cursemeta.nikky.moe
 
   local: &local_settings
     folder: local
 
-
 pack_defaults:
+  direct: &direct
+    type: direct
+    url: null
+    # file_name: null
+    package_type: mod
+    path: mods
 
-    curse: &direct
-        type: direct
-        url: null
-        # file_name: null
-        package_type: mod
-        path: mods
-
-    curse: &curse
-        type: curse
-        # name: null
-        # id: null
-        # package_type: mod
-        # path: mods
-        
-        # TODO: optional: falspe: mvne # if curse should add optional dependencies
-        # TODO: required: true # if curse not add required dependencies / disable dependency resolition
-
-    github: &github
-        type: github
-        # user: null
-        # repo: null
-        # tag: null
-        package_type: mod
-        path: mods
-
-    maven: &mvn
-        type: mvn
-        # remoteRepository: null
-        # group: null
-        # artifact: null
-        # version: null
-        package_type: mod
-        path: mods
+  curse: &curse
+    type: curse
+    # name: null
+    # id: null
+    # package_type: mod
+    # path: mods
     
-    jenkins: &jenkins
-        type: jenkins
-        # jenkins_url: null
-        # job: null
-        file_name_regex: '.*(?<!-sources\.jar)(?<!-api\.jar)$'
-        package_type: mod
-        path: mods
+    # TODO: optional: falspe: mvne # if curse should add optional dependencies
+    # TODO: required: true # if curse not add required dependencies / disable dependency resolition
 
-    local: &local
-        type: local
-        file: null
-        # file_name: null
-        package_type: mod
-        path: mods
+  github: &github
+    type: github
+    # user: null
+    # repo: null
+    # tag: null
+    package_type: mod
+    path: mods
 
-    side:
-      client: &client
-        side: client
+  maven: &mvn
+    type: mvn
+    # remoteRepository: null
+    # group: null
+    # artifact: null
+    # version: null
+    package_type: mod
+    path: mods
+  
+  jenkins: &jenkins
+    type: jenkins
+    # jenkins_url: null
+    # job: null
+    file_name_regex: '.*(?<!-sources\.jar)(?<!-api\.jar)$'
+    package_type: mod
+    path: mods
 
-      server: &server
-        side: server
+  local: &local
+    type: local
+    file: null
+    # file_name: null
+    package_type: mod
+    path: mods
 
-      both: &both
-        side: server
+  side:
+    client: &client
+      side: client
 
-    feature: &feature
-        # feature_name: name or name of mod that depends on this
-        selected: true
-        # description: null
-        # recommendation: "starred" or "avoid"
+    server: &server
+      side: server
+
+    both: &both
+      side: server
+
+  feature: &feature
+    # feature_name: name or name of mod that depends on this
+    selected: true
+    # description: null
+    # recommendation: "starred" or "avoid"

@@ -1,7 +1,9 @@
+from itertools import groupby
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Tuple
 
 import requests
+import yaml
 
 from ..cftypes import *
 from .BaseProvider import BaseProvider
@@ -33,13 +35,27 @@ class CurseProvider(BaseProvider):
 
     optional = False
     release_types = [str(RLType.Release), str(RLType.Beta)]
+    meta_url: str = '---https://cursemeta.nikky.moe'
+    dump_data = True
 
     def __init__(self, *args, **kwargs): # optional, default_release_types,
         super().__init__(*args, **kwargs)
+        
+        data_path = kwargs['data_path']
         self.addon_data = self.get_addon_data()
-        # self.download_optional = optional
-        # self.default_release_types = default_release_types
-        print("CurseProvider .ctor")
+        if self.dump_data:
+            key = 'categorySection.name'
+            for addon_type, addons in groupby(sorted(self.addon_data, key=lambda k: k[key]), lambda d: d[key]):
+                path = Path(data_path, 'addons', f'{addon_type}.yaml')
+                addon_data = dict()
+                for addon in addons:
+                    website_url = addon['websiteURL']
+                    addon_id = addon['id']
+                    api_url = f'{self.meta_url}/api/addon/{addon_id}'
+                    addon_data[addon['name']] = {'webste_url': website_url, 'api_url': api_url}
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with open(path, 'w') as outfile:
+                    yaml.dump(addon_data, outfile, default_flow_style=False)
 
     def match_dict(self, entry: dict):
         # print(f"checking for name or addon_id in {entry}")
@@ -198,9 +214,9 @@ class CurseProvider(BaseProvider):
     def get_addon_data(self) -> List[Mapping[str, Any]]:
         if self.debug:
             print(
-                f'get https://cursemeta.nikky.moe/api/addon/?mods=1&property=id,name,summary,websiteURL,packageType,categorySection.path')
+                f'get {self.meta_url}/api/addon/?mods=1&property=id,name,summary,websiteURL,packageType,categorySection.name,categorySection.path')
         req = requests.get(
-            f'https://cursemeta.nikky.moe/api/addon/?mods=1&texturepacks=1&worlds=1&property=id,name,summary,websiteURL,packageType,categorySection.path')
+            f'{self.meta_url}/api/addon/?mods=1&texturepacks=1&worlds=1&property=id,name,summary,websiteURL,packageType,categorySection.name,categorySection.path')
         req.raise_for_status()
         if req.status_code == 200:
             addon_data = req.json()
@@ -214,8 +230,8 @@ class CurseProvider(BaseProvider):
         addon = next(a for a in self.addon_data if a['id'] == addon_id)
         return addon
         if self.debug:
-            print(f'get https://cursemeta.nikky.moe/api/addon/{addon_id}')
-        req = requests.get(f'https://cursemeta.nikky.moe/api/addon/{addon_id}')
+            print(f'get {self.meta_url}/api/addon/{addon_id}')
+        req = requests.get(f'{self.meta_url}/api/addon/{addon_id}')
         req.raise_for_status()
         if req.status_code == 200:
             addon = req.json()
@@ -230,9 +246,9 @@ class CurseProvider(BaseProvider):
 
         if self.debug:
             print(
-                f'get https://cursemeta.nikky.moe/api/addon/{addon_id}/files/{file_id}')
+                f'get {self.meta_url}/api/addon/{addon_id}/files/{file_id}')
         req = requests.get(
-            f'https://cursemeta.nikky.moe/api/addon/{addon_id}/files/{file_id}'
+            f'{self.meta_url}/api/addon/{addon_id}/files/{file_id}'
         )
         req.raise_for_status()
         if req.status_code == 200:
@@ -248,9 +264,9 @@ class CurseProvider(BaseProvider):
             addon_files = self.__file_cache.get(id, None)
         if self.debug:
             print(
-                f'get https://cursemeta.nikky.moe/api/addon/{addon_id}/files')
+                f'get {self.meta_url}/api/addon/{addon_id}/files')
         req = requests.get(
-            f'https://cursemeta.nikky.moe/api/addon/{addon_id}/files'
+            f'{self.meta_url}/api/addon/{addon_id}/files'
         )
         req.raise_for_status()
         if req.status_code == 200:

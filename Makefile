@@ -7,18 +7,23 @@ setup:
 	)
 
 install:
+	pip install --user subzero
+	pip uninstall voodoo -y; true
 	pip install --user --force .
+
+uninstall:
+	pip uninstall voodoo -y
 
 run:
 	( \
 	    source virtualenv/bin/activate; \
-	    python -m voodoo config/config.yaml; \
+	    python -m voodoo -c config/config.yaml; \
 	)
 
 run-debug:
 	( \
 	    source virtualenv/bin/activate; \
-	    python -m voodoo config/config.yaml --debug; \
+	    python -m voodoo -c config/config.yaml --debug; \
 	)
 
 .PHONY: setup install run run-debug

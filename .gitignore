@@ -17,3 +17,5 @@ virtualenv/
 config/old/
 
 config/build/
+
+config/fail/

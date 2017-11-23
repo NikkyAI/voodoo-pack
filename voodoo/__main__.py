@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .voodoo import run
+from .voodoo import main
 
 if __name__ == "__main__":
-    run()
+    main()

@@ -5,7 +5,7 @@ from graphviz import Digraph
 
 from .cftypes import DependencyType, Side
 
-def generate_graph(entries: List[dict], path: Path):
+def generate_graph(entries: List[dict], path: Path, pack_name: str):
     side_color = {
         Side.Client: 'lawngreen',
         Side.Server: 'deepskyblue',
@@ -76,8 +76,6 @@ def generate_graph(entries: List[dict], path: Path):
                 #     feature.node(f'{feature_name}_{recommendation}', recommendation, style='filled,dashed', fillcolor=recommendation_color[recommendation])
         else:
             dot.node(name, name, style='filled', fillcolor=side_color[side])
-       
-    # TODO: subgraphs for features
 
     for entry in entries:
         name = entry.get('name', entry.get('file_name'))
@@ -96,6 +94,6 @@ def generate_graph(entries: List[dict], path: Path):
 
                 
 
-    dot.attr(label=r'\n\nTODO: pack name here')
+    dot.attr(label=f'\n\n{pack_name}')
     dot.attr(fontsize='20')
     dot.render()

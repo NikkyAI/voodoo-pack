@@ -41,15 +41,17 @@ register handlers for types: [ curse, github, maven, jenkins, direct, local ]
 }
 ```
 
+- better config merging \
+  recursive merging for keys that are both dicts, override for mismatched types
+
+- dump defaults for each provider next to package_type.yaml
+
 - packageType: folder, singlefile
   - folder: uncompress
   - singlefile
 
 - improve cache system
-  - copy into target filename
-
-- support mc_version list \
-  or support version startswith mc_version
+  - keep etag or filehash
 
 - generate multi file features
 
