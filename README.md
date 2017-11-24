@@ -24,6 +24,8 @@ caches downloaded mods to avoid redownloading for `curse`, `jenkins` and `github
 
 ## setup and execution
 
+instal graphviz
+
 execute `make install-required` or `pip install --user -r requirements.txt` once to install the required packages
 
 execute `make run` or `python -m voodoo` to execute the pack builder

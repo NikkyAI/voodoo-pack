@@ -389,18 +389,31 @@ class Voodoo:
             raise ke
 
     def add_to_workspace(self, location: str):
-        path = Path(self.global_config['output'],
+        output_path = self.global_config['output']
+        path = Path(output_path,
                     '.modpacks', 'workspace.json')
         Path(path.parent).mkdir(parents=True, exist_ok=True)
-        with open(path, 'r') as workspace_file:
-            workspace = json.load(workspace_file)
-            locations = [p for p in workspace['packs']
-                         if p['location'] == location]
+
+        workspace_default = {'packs': [], 'packageListingEntries': [], 'packageListingType': 'STATIC'}
+        if not path.exists():
+            workspace = workspace_default
+        else:
+            try:
+                with open(path, 'r') as workspace_file:
+                    workspace = json.load(workspace_file)
+                    locations = [p for p in workspace['packs']
+                                if p['location'] == location]
+            except json.JSONDecodeError:
+                workspace = workspace_default
+
+        locations = [p for p in workspace['packs'] if p['location'] == location]
         if locations:
+            print(f'{location} is already in workspace.json')
             return
         workspace['packs'].append({'location': location})
+        print(f'writing workspace json to {path}')
         with open(path, 'w') as workspace_file:
-            json.dumps(workspace, workspace_file, indent=4 * ' ')
+            json.dump(workspace, workspace_file, indent=4 * ' ')
 
     def get_forge_data(self) -> List[Dict[str, Any]]:
         if self.debug:
