@@ -90,8 +90,87 @@ class BaseProvider:
     def resolve_dependencies(self, entry: dict, entries: List[dict]):
         pass
 
-    def resolve_feature_dependencies(self, entry: dict, entries: List[dict]):
-        pass
+    def resolve_feature_dependencies(self, entry: dict, entries: List[dict], features: List[dict]):
+        # check if it is a feature
+        entry_name = entry.get('name')
+        feature_name = entry.get('feature_name', entry_name)
+        feature = next((f for f in features if f['name'] == feature_name), None)
+        if 'selected' in entry and not feature:
+            # find features
+
+            # add feature
+            print(entry)
+            feature = {
+                'name': feature_name,
+                'names': [feature_name],
+                'entry_refs': [
+                    entry['name']
+                ],
+                'processed_entries': []
+                #'addon_refs': [entry.get('name')]
+            }
+            existing = [f for f in features if entry_name in f['entry_refs']]
+            for f in existing:
+                print(f'TODO: DUPLICATE {f} and add {entry_name}')
+            #TODO: if entry is found in other features, duplicate all and add yourself
+            features.append(feature)
+
+            self.process_feature(feature, entries, features)
+
+    def process_feature(self, feature: dict, entries: list, features: list):
+        print(f'processing {feature}')
+        feature_name = feature['name']
+        while(len(feature['processed_entries']) < len(feature['entry_refs'])):
+            processable_entries = [e for e in feature['entry_refs'] if e not in feature['processed_entries']]
+            print(f'processable: {processable_entries}')
+            for entry_ref in processable_entries:
+                print(f'searching {entry_ref}')
+                entry = next((e for e in entries if e.get('name') == entry_ref), None)
+                if not entry:
+                    print(f'{entry_ref} not in entries')
+                    feature['processed_entries'].append(entry_ref)
+                    continue
+
+                depends = entry.get('depends', {})
+                # flatdepends = [d for _, deps in depends.items() for d in deps]
+                dep_names = [d for deps in depends.values() for d in deps]
+                print(f'dep_names: {dep_names}')
+
+                # only add what is found in entries
+                dep_names = [d for d in dep_names if any(d == e.get('name') for e in entries)]
+                print(f'filtered dep_names: {dep_names}')
+                for dep in dep_names:
+                    if dep not in feature['entry_refs']:
+                        feature['entry_refs'].append(dep)
+
+                # # find all features with any intersection
+                # existing = []
+                # for f in features:
+                #     for e in f['entry_refs']:
+                #         if e in dep_names:
+                #             existing.append(f)
+                # print(existing)
+                # for f in existing:
+                #     print(f'{f} + {feature}')
+                #     if any(na in feature['names'] for na in f['names']):
+                #         print(f'{feature_name} tried to duplicate intersecting values')
+                #         continue
+                #     merged_name = f['name'] + '_' + feature['name']
+                #     merged = next((fe for fe in features if fe['name'] == merged_name), None)
+                #     if merged:
+                #         print(f'already exists {merged}')
+                #     if not merged:
+                #         print(f"merging {f['names']} \n{feature['names']}\n")
+                #         merged = {
+                #             'name': f['name'] + '_' + feature['name'],
+                #             'names': [*f['names'], *feature['names']],
+                #             'entry_refs': [*f['entry_refs'], *feature['entry_refs']],
+                #             'processed_entries': [*f['processed_entries'], *feature['processed_entries']],
+                #         }
+                #         features.append(merged)
+                #     self.process_feature(merged, entries, features)
+                
+                feature['processed_entries'].append(entry_ref)
 
     def fill_information(self, entry: dict):
         if 'feature_name' not in entry and 'name' in entry and 'selected' in entry:
@@ -145,6 +224,8 @@ class BaseProvider:
     def resolve_path(self, entry: dict):
         package_type = entry.get('package_type') or 'mod'
         path = Path(entry.get('path') or 'mods')
+        entry['target_path'] = str(Path(path, entry.get(
+            'file_name')))
         if package_type == 'mod':
             side = entry.get('side') or 'both'
             if side.lower() == 'both':
@@ -178,7 +259,7 @@ class BaseProvider:
         if 'description' in entry and 'selected' in entry:
             full_path = src_path / entry['file_path']
             json_path = Path(f"{full_path}.info.json").resolve()
-            json_path.parent.mkdir(parents=True, exist_ok=True)
+            Path(json_path.parent).mkdir(parents=True, exist_ok=True)
             feature_data = {'feature': {k: v for k, v in entry.items() if k in (
                 'description', 'selected', 'recommendation', 'name')}}
             with open(json_path, 'w') as json_file:

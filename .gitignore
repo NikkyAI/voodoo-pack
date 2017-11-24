@@ -1,21 +1,17 @@
 # IntelliJ project files
 .idea
-out
-gen
 __pycache__/
 /modpacks/
 /config/private/
-/build/
-*.spec
-
-cfpecker/
 
 \.vscode/\.ropeproject/
 
-virtualenv/
+.virtualenv/
 
 config/old/
 
 config/build/
 
 config/fail/
+
+test/

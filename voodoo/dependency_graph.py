@@ -67,7 +67,8 @@ def generate_graph(entries: List[dict], path: Path, pack_name: str):
                 fillcolor = f'lightgrey'
                 if recommendation:
                     fillcolor += f':{recommendation_color[recommendation]};0.1'
-                fillcolor += f':{selected_color[selected]};0.1'
+                if selected != None:
+                    fillcolor += f':{selected_color[selected]};0.1'
 
                 feature.attr(fillcolor=fillcolor)
                 feature.attr(label=feature_name + '\n' + entry.get('description', ''))

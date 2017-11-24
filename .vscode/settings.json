@@ -1,3 +1,7 @@
 {
-    "python.pythonPath": "${workspaceRoot}/virtualenv/bin/python"
+    "files.exclude": {
+        ".virtualenv/": true
+        "**/__pycache__/": true
+    },
+    "python.pythonPath": "${workspaceRoot}/.virtualenv/bin/python"
 }

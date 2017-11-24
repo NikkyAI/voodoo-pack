@@ -1,15 +1,17 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
 import argparse
-import sys
 import io
+import sys
 import traceback
+from itertools import groupby
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Tuple
 
 import appdirs
 import requests
+import simplejson as json
 import yaml
 
 from .cftypes import DependencyType, RLType
@@ -51,7 +53,7 @@ class Voodoo:
 
         # parse config
         config_dir = self.config_path.parent
-        self.config = {}
+        self.global_config = {}
 
         config_suffix = self.config_path.suffix
         if config_suffix == '.yaml':
@@ -66,11 +68,11 @@ class Voodoo:
             self.config_str = output.getvalue()
             output.close()
 
-            self.config = yaml.load(self.config_str, Loader)
+            self.global_config = yaml.load(self.config_str, Loader)
             if self.debug:
-                print(yaml.dump(self.config))
+                print(yaml.dump(self.global_config))
             self.config_path = config_dir
-            temp_path = self.config.get('temp_path')
+            temp_path = self.global_config.get('temp_path')
             if temp_path:
                 temp_path = Path(self.config_path, temp_path)
                 temp_path.mkdir(parents=True, exist_ok=True)
@@ -90,11 +92,11 @@ class Voodoo:
     def process_packs(self):
         if self.packs:
             for pack in self.packs:
-                meta_config = self.config['modpacks'].get(pack, {})
+                meta_config = self.global_config['modpacks'].get(pack, {})
                 self.process_pack(
                     pack_base=pack, meta_config=meta_config, disable_skip=True)
         else:
-            for pack, meta_config in self.config['modpacks'].items():
+            for pack, meta_config in self.global_config['modpacks'].items():
                 self.process_pack(pack_base=pack, meta_config=meta_config)
 
     def process_pack(self, pack_base: str, meta_config: dict = {}, disable_skip: bool = False):
@@ -104,7 +106,8 @@ class Voodoo:
         else:
             print(f'processing {pack_base}')
 
-        pack_config_base = Path(self.config_path, self.config.get('packs'))
+        pack_config_base = Path(
+            self.config_path, self.global_config.get('packs'))
         pack_config_path = pack_config_base / f'{pack_base}.yaml'
 
         output = io.StringIO()
@@ -123,7 +126,8 @@ class Voodoo:
             temp_path = temp_path / f'{pack_base}.yaml'
             with open(temp_path, 'w') as outfile:
                 outfile.write(config_str)
-            print(f'written failing yaml to {temp_path} \nfailed parsing config {exc}')
+            print(
+                f'written failing yaml to {temp_path} \nfailed parsing config {exc}')
             exit(-1)
         # apply config overrides
         pack_config == {**pack_config, **meta_config}
@@ -156,6 +160,8 @@ class Voodoo:
         provider_settings = pack_config.get('provider_settings', {})
         provider_args = {'debug': self.debug, 'output_path': output_path, 'data_path': data_path,
                          'default_mc_version': mc_version, 'provider_settings': provider_settings}
+
+        print('initializing providers')
 
         providers: List[BaseProvider] = []
         providers.append(CurseProvider(**provider_args))
@@ -221,16 +227,20 @@ class Voodoo:
 
             # print(f'entries: \n{yaml.dump(entries)}')
 
+            features = []
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.resolve_dependencies(entry, entries)
+            
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
-                provider.resolve_feature_dependencies(entry, entries)
+                provider.resolve_feature_dependencies(entry, entries, features)
 
-            # if args.debug:
-                # print(f'resolve dep entries: \n{yaml.dump(entries)}')
+            print(f'features: \n{yaml.dump(features)}')
+
+            if self.debug:
+                print(f'resolve dep entries: \n{yaml.dump(entries)}')
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -247,7 +257,9 @@ class Voodoo:
                     entry, Path(self.cache_dir, provider.typ))
 
             assert_dict('prepare_download',
-                        ('url', 'file_name', 'cache_path'), entries)
+                        ('url', 'file_name', 'cache_path'), [e for e in entries if e['type'] != 'local'])
+            assert_dict('prepare_download',
+                        ('file_name', 'file'), [e for e in entries if e['type'] == 'local'])
 
             src_path = Path(output_path, 'src')
 
@@ -273,9 +285,9 @@ class Voodoo:
             rmtree(str(mod_path.resolve()), ignore_errors=True)
             mod_path.mkdir(parents=True, exist_ok=True)
 
-            for entry in entries:
-                provider: BaseProvider = provider_map[entry['type']]
-                provider.write_feature(entry, src_path)
+            # for entry in entries:
+            #     provider: BaseProvider = provider_map[entry['type']]
+            #     provider.write_feature(entry, src_path)
 
             if urls:
                 # requires path to be known
@@ -295,6 +307,72 @@ class Voodoo:
 
         # TODO: generate modpack.json
 
+            # collect features
+
+            features_list = []
+            for f in features:
+                prop = {
+                    'name': f['name'],
+                    'description': '',
+                    'recommendation': None,
+                    'selected': None
+                }
+                includes = []
+                excludes = []
+                for entry_ref in f['entry_refs']:
+                    entry = next(e for e in entries if e['name'] == entry_ref)
+                    include = entry.get('include', [])
+                    include.insert(0, entry['target_path'])
+                    includes.extend(include)
+                    exclude = entry.get('exclude', [])
+                    excludes.extend(exclude)
+                    description = entry.get('description')
+                    if description:
+                        prop['description'] += entry_ref + ': ' + description + '\n\n'
+                    if not prop['recommendation']: 
+                        #TODO: check for last dep level
+                        prop['recommendation'] = entry.get('recommendation')
+                    if prop.get('selected') == None:
+                        #TODO: check for last dep level
+                        prop['selected'] = entry.get('selected')
+                        
+                prop['selected'] = prop.get('selected', False)
+                feature = {
+                    'properties': prop,
+                    'files': {
+                        'include': includes,
+                        'exclude': excludes
+                    }
+                }
+                features_list.append(feature)
+
+            # generate modpack obj
+            modpack = {
+                'name': pack_name,
+                'title': None,
+                'gameVersion': str(mc_version[0]),
+                'features': features_list,
+                'userFiles': {
+                    'include': ['options.txt', 'optionsshaders.txt'],
+                    'exclude': []
+                },
+                'launch': {
+                    'flags': [
+                        '-Dfml.ignoreInvalidMinecraftCertificates=true'
+                    ]
+                }
+            }
+
+            # TODO: generate features
+
+            # write to json
+            modpack_path = Path(output_path, 'modpack.json').resolve()
+            print(f'wwriting modpack to {modpack_path}')
+            with open(modpack_path, 'w') as modpack_file:
+                json.dump(modpack, modpack_file, indent=4 * ' ')
+
+            self.add_to_workspace(location=pack_base)
+
         except KeyError as ke:
             tb = traceback.format_exc()
             arg = ke.args[0]
@@ -310,7 +388,21 @@ class Voodoo:
                 print(tb)
             raise ke
 
-    def get_forge_data(self) -> List[Mapping[str, Any]]:
+    def add_to_workspace(self, location: str):
+        path = Path(self.global_config['output'],
+                    '.modpacks', 'workspace.json')
+        Path(path.parent).mkdir(parents=True, exist_ok=True)
+        with open(path, 'r') as workspace_file:
+            workspace = json.load(workspace_file)
+            locations = [p for p in workspace['packs']
+                         if p['location'] == location]
+        if locations:
+            return
+        workspace['packs'].append({'location': location})
+        with open(path, 'w') as workspace_file:
+            json.dumps(workspace, workspace_file, indent=4 * ' ')
+
+    def get_forge_data(self) -> List[Dict[str, Any]]:
         if self.debug:
             print(
                 f'get http://files.minecraftforge.net/maven/net/minecraftforge/forge/json')
@@ -369,5 +461,5 @@ class Voodoo:
         cache_dir = Path(Path(self.cache_dir, 'forge'), str(longversion))
 
         entry = {'type': 'direct', 'cache_path': str(cache_dir), 'url': url, 'file_name': file_name,
-                 'path': 'loaders', 'name': 'Minecraft Forge'}
+                 'path': '../loaders', 'name': 'Minecraft Forge'}
         return entry

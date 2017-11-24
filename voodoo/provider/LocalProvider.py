@@ -13,15 +13,19 @@ class LocalProvider(BaseProvider):
     """
 
     # optional = ('file_name')
-    required_attributes = ('file')
+    required_attributes = ('file', 'path', 'package_type')
 
     typ = 'local'
 
     local_base = 'local'
-
-    def fill_information(self, entry: dict):
+    
+    def prepare_dependencies(self, entry: dict):
         if not 'name' in entry:
             entry['name'] = Path(entry['file']).resolve().name.rstrip('.jar')
+        
+    def fill_information(self, entry: dict):
+        # if not 'name' in entry:
+        #     entry['name'] = Path(entry['file']).resolve().name.rstrip('.jar')
         if not 'file_name' in entry:
             entry['file_name'] = Path(entry['file']).resolve().name
         super().fill_information(entry)
@@ -33,10 +37,10 @@ class LocalProvider(BaseProvider):
     def write_direct_url(self, entry: dict, src_path: Path):
         pass
 
-    def download(self, entry: dict, src_path: Path):  # TODO: add
+    def download(self, entry: dict, src_path: Path):
         file_src = Path(entry['file'])
         if(not os.path.isabs(file_src)):
-            file_src = Path(self.local_base, entry['file'])
+            file_src = Path(src_path.parent, self.local_base, entry['file']).resolve()
         file_name = entry.get('file_name', file_src.name)
         path = Path(src_path, entry['path']).resolve()
         path = path / file_name

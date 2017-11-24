@@ -38,9 +38,9 @@ class CurseProvider(BaseProvider):
     meta_url: str = '---https://cursemeta.nikky.moe'
     dump_data = True
 
-    def __init__(self, *args, **kwargs): # optional, default_release_types,
+    def __init__(self, *args, **kwargs):  # optional, default_release_types,
         super().__init__(*args, **kwargs)
-        
+
         data_path = kwargs['data_path']
         self.addon_data = self.get_addon_data()
         if self.dump_data:
@@ -52,8 +52,9 @@ class CurseProvider(BaseProvider):
                     website_url = addon['websiteURL']
                     addon_id = addon['id']
                     api_url = f'{self.meta_url}/api/addon/{addon_id}'
-                    addon_data[addon['name']] = {'webste_url': website_url, 'api_url': api_url}
-                path.parent.mkdir(parents=True, exist_ok=True)
+                    addon_data[addon['name']] = {
+                        'webste_url': website_url, 'api_url': api_url}
+                Path(path.parent).mkdir(parents=True, exist_ok=True)
                 with open(path, 'w') as outfile:
                     yaml.dump(addon_data, outfile, default_flow_style=False)
 
@@ -97,71 +98,39 @@ class CurseProvider(BaseProvider):
             depends[str(dep_type)] = depend_list
             entry['depends'] = depends
 
-            for other_entry in entries:
-                if other_entry['type'] == 'curse' and other_entry['addon_id'] == dep_addon_id:
-                    # dependency addon is already in the download list
-                    # merge sides
-                    other_side = Side.get(other_entry.get('side', 'both'))
-                    side = Side.get(entry.get('side', 'both'))
-                    entry['side'] = str(side | other_side)
-
-                    provides = other_entry.get('provides', {})
-                    provide_list = other_entry.get(str(dep_type), [])
-                    provide_list.append(addon['name'])
-                    provides[str(dep_type)] = provide_list
-                    other_entry['provides'] = provides
-
-                    break
-
-            else:
+            # find duplicat entry
+            dep_entry = next((e for e in entries if e['type'] == 'curse' and e.get(
+                'addon_id') == dep_addon_id), None)
+            if not dep_entry:
                 if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and entry.get('optional')):
                     dep_addon_id, dep_file_id, file_name = self.find_file(
-                        addon_id=dep_addon_id, mc_version=entry.get('default_mc_version'))
+                        addon_id=dep_addon_id, mc_version=self.default_mc_version)
                     dep_addon = self.get_add_on_file(dep_addon_id, dep_file_id)
                     if dep_addon_id > 0 and dep_file_id > 0:
                         dep_addon = self.get_add_on(dep_addon_id)
-                        dep_entry = {'addon_id': dep_addon_id, 'file_id': dep_file_id,
-                                     'name': dep_addon['name'], 'type': 'curse', 'provides': {str(dep_type): [addon['name']]}, '_transient_dependency': True}
+                        dep_entry = {
+                            'addon_id': dep_addon_id,
+                            'file_id': dep_file_id,
+                            'name': dep_addon['name'],
+                            'type': 'curse',
+                            # 'provides': {str(dep_type): [addon['name']]}, # added by second step
+                        }
                         entries.append(dep_entry)
 
                         print(
                             f"added {dep_type} dependency {file_name} \nof {addon['name']}")
 
-    def resolve_feature_dependencies(self, entry: dict, entries: List[dict]):
-        # check if it is a feature
-        if 'selected' in entry and 'description' in entry:
-            # check if feature has a name
-            if 'feature_name' not in entry:
-                # feature name is not set
-                entry['feature_name'] = entry['name']
+            if dep_entry:
+                # merge sides
+                other_side = Side.get(dep_entry.get('side', 'both'))
+                side = Side.get(entry.get('side', 'both'))
+                entry['side'] = str(side | other_side)
 
-        # TODO: enable and handle when writing multifile optional features into modpack.json is implemented
-        # if 'feature_name' in entry: # or '_prefix' in entry:
-        #     feature_name = entry['feature_name']
-        #     prefix = feature_name
-
-        #     depends = entry.get('depends', {})
-        #     for dep_str, dep_ids in depends.items():
-        #         for dep_id in dep_ids:
-        #             dep_entry = next ( e for e in entries if e['addon_id'] == dep_id )
-        #             self.handle_entry(prefix, feature_name, dep_entry, entries)
-
-    # def handle_entry(self, prefix, feature_name, entry, entries):
-    #     # if entry if a feaure or has a _prefix or is a dependency
-    #     if ('selected' in entry ) or entry.get('_transient_dependency'):
-    #         # duplicate dep_entry
-    #         if not entry.get('_transient_dependency') or not '_prefix' in entry:
-    #             entry = {x: entry[x] for x in entry if x not in ('selected')}
-    #             entries.append(entry)
-    #         entry['feature_name'] = feature_name
-    #         entry['_prefix'] = prefix
-
-    #         depends = entry.get('depends', {})
-    #         for dep_str, dep_ids in depends.items():
-    #             for dep_id in dep_ids:
-    #                 print(f'seaching for id: {dep_id}')
-    #                 dep_entry = next ( e for e in entries if e['addon_id'] == dep_id )
-    #                 self.handle_entry(prefix, feature_name, dep_entry, entries)
+                provides = dep_entry.get('provides', {})
+                provide_list = dep_entry.get(str(dep_type), [])
+                provide_list.append(addon['name'])
+                provides[str(dep_type)] = provide_list
+                dep_entry['provides'] = provides
 
     def fill_information(self, entry: dict):
         addon_id = entry['addon_id']
@@ -200,7 +169,6 @@ class CurseProvider(BaseProvider):
             provides[str(release_type)] = new_list
         entry['provides'] = provides
         super().fill_information(entry)
-
 
     def prepare_download(self, entry: dict, cache_base: Path):
         entry['type'] = 'direct'
@@ -321,8 +289,10 @@ class CurseProvider(BaseProvider):
             # for f in files:
             #     print(f)
             file = files[0]
-            return addon_id, file['id'], file['fileNameOnDisk']  # , description
+            # , description
+            return addon_id, file['id'], file['fileNameOnDisk']
 
         print(addon)
-        print(f"no matching version found for: {addon['name']} addon url: {addon['websiteURL']} mc_version: {mc_version} version: {version} ")
+        print(
+            f"no matching version found for: {addon['name']} addon url: {addon['websiteURL']} mc_version: {mc_version} version: {version} ")
         return addon_id, -1, ''
