@@ -72,7 +72,7 @@ class DirectProvider(BaseProvider):
         with open(file_path, "wb") as mod_file:
             mod_file.write(file_response.content)
 
-        print(f"[{entry['name']}] {cached_files[0].name} (downloaded)")
+        print(f"[{entry['name']}] {file_name} (downloaded)")
 
         # Try to add file to cache.
         if not dep_cache_dir.exists():
