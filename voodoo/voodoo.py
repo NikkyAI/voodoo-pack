@@ -367,7 +367,7 @@ class Voodoo:
 
             # write to json
             modpack_path = Path(output_path, 'modpack.json').resolve()
-            print(f'wwriting modpack to {modpack_path}')
+            print(f'writing modpack json to {modpack_path}')
             with open(modpack_path, 'w') as modpack_file:
                 json.dump(modpack, modpack_file, indent=4 * ' ')
 
