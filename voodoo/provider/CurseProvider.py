@@ -17,18 +17,18 @@ class CurseProvider(BaseProvider):
     """
 
     # optional = ("addon_id", "name", "mc_version", "release_type", "no_required", "no_optional")
-    required_attributes = ()
-    typ = 'curse'
+    _required_attributes = ()
+    _typ = 'curse'
 
     __file_cache = {}
 
     def from_str(self, data: str):
-        return {'name': data, 'type': CurseProvider.typ}
+        return {'name': data, 'type': self._typ}
 
     def from_int(self, data: int):
-        return {'addon_id': data, 'type': CurseProvider.typ}
+        return {'addon_id': data, 'type': self._typ}
 
-    conversion = {
+    _conversion = {
         str: from_str,
         int: from_int
     }

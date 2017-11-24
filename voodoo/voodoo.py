@@ -174,7 +174,7 @@ class Voodoo:
         print(f'output path {output_path}')
         mods = pack_config.get('mods', [])
 
-        provider_map = {p.typ: p for p in providers}
+        provider_map = {p._typ: p for p in providers}
 
         def find_matching(mod: Any) -> BaseProvider:
             for provider in providers:
@@ -254,7 +254,7 @@ class Voodoo:
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.prepare_download(
-                    entry, Path(self.cache_dir, provider.typ))
+                    entry, Path(self.cache_dir, provider._typ))
 
             assert_dict('prepare_download',
                         ('url', 'file_name', 'cache_path'), [e for e in entries if e['type'] != 'local'])

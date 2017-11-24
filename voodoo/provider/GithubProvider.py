@@ -9,6 +9,6 @@ class GithubProvider(BaseProvider):
     """
 
     # optional = ('tag')
-    required_attributes = ('user', 'repo')
-    typ = 'github'
+    _required_attributes = ('user', 'repo')
+    _typ = 'github'
 

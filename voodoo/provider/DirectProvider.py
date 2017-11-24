@@ -15,8 +15,8 @@ class DirectProvider(BaseProvider):
     Donloads files form urls directly
     """
     # optional = ('file_name',)
-    required_attributes = ('url', 'path', 'package_type')
-    typ = 'direct'
+    _required_attributes = ('url', 'path', 'package_type')
+    _typ = 'direct'
 
     def validate(self, entry: dict) -> bool:
         return True

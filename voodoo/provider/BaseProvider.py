@@ -15,14 +15,15 @@ class BaseProvider:
     Provider Base class
     """
     # optional = ()
-    required_attributes = ()
-    defaults = {}
-    typ = None
+    _base_instance = None
+    _required_attributes = ()
+    _defaults = {}
+    _typ = None
 
     def from_dict(self, entry: dict):
         return entry #TODO: filter out not optiona and not requires
 
-    conversion = {
+    _conversion = {
         dict: from_dict
     }
 
@@ -33,25 +34,30 @@ class BaseProvider:
         if type(self) is BaseProvider:
             return
         if self.debug:
-            print(f'{self.typ.upper()} Provider .ctor')
-        attribute_keys = ['debug', 'default_mc_version']
-        for attribute_key in attribute_keys:
+            print(f'{self._typ.upper()} Provider .ctor')
+        
+        if not self._base_instance:
+            self.instance = self.__class__.__bases__[0]()
+        base_attributes = inspect.getmembers(self.instance, lambda a:not(inspect.isroutine(a)))
+        base_keys = [a[0] for a in base_attributes if not(a[0].startswith('_'))]
+        # base_keys = ['debug', 'default_mc_version']
+
+        for attribute_key in base_keys:
             if attribute_key in kwargs:
                 value = kwargs.get(attribute_key)
                 setattr(self, attribute_key, kwargs[attribute_key])
 
         provider_settings = kwargs.get('provider_settings', {})
-        provider_settings = provider_settings.get(self.typ, {})
+        provider_settings = provider_settings.get(self._typ, {})
 
         if self.debug:
-            print(f'{self.typ} settings: {provider_settings}')
+            print(f'{self._typ} settings: {provider_settings}')
 
         attributes = inspect.getmembers(self, lambda a:not(inspect.isroutine(a)))
-        base_attributes = inspect.getmembers(self.__class__.__bases__[0](), lambda a:not(inspect.isroutine(a)))
-        attribute_keys = [a[0] for a in attributes if not(a[0].startswith('_'))]
-        base_keys = [a[0] for a in base_attributes if not(a[0].startswith('_'))]
-        attribute_keys = list(set(attribute_keys) - set(base_keys))
 
+        attribute_keys = [a[0] for a in attributes if not(a[0].startswith('_'))]
+        attribute_keys = list(set(attribute_keys) - set(base_keys))
+        
         path = Path(kwargs['data_path'], 'defaults.yaml')
         if path.is_dir():
             path.rmdir()
@@ -64,7 +70,7 @@ class BaseProvider:
                     print(exc)
                     global_defaults = {}
         # get all default values
-        global_defaults[self.typ] = {k: getattr(self, k) for k in attribute_keys}
+        global_defaults[self._typ] = {k: getattr(self, k) for k in attribute_keys}
         with open(path, 'w') as outfile:
             yaml.dump(global_defaults, outfile, default_flow_style=False)
 
@@ -77,7 +83,7 @@ class BaseProvider:
                 setattr(self, attribute_key, provider_settings[attribute_key])
 
     def apply_defaults(self, entry: dict):
-        for key, value in self.defaults.items():
+        for key, value in self._defaults.items():
             if key not in entry:
                 entry[key] = value
 
@@ -185,7 +191,7 @@ class BaseProvider:
     def convert(self, entry: Any) -> dict:
         if isinstance(entry, dict):
             return entry
-        conv_func = self.conversion.get(type(entry), None)
+        conv_func = self._conversion.get(type(entry), None)
         if(conv_func):
             converted = conv_func(self, entry)
             if not converted or not isinstance(converted, dict):
@@ -202,17 +208,17 @@ class BaseProvider:
 
     def match_dict(self, entry: dict):
         # result = all (k in entry for k in self.required)
-        missing = list(set(self.required_attributes) - set(entry.keys()))
+        missing = list(set(self._required_attributes) - set(entry.keys()))
         if missing:
             print(
-                f"INFO: not matching {self.typ} missing from config: {missing}", file=sys.stderr)
+                f"INFO: not matching {self._typ} missing from config: {missing}", file=sys.stderr)
             return False
         return True
 
     def __match(self, entry: dict) -> bool:
         entry_type = entry.get('type')
         if entry_type:
-            if entry_type != self.typ:
+            if entry_type != self._typ:
                 return False
             else:
                 return self.match_dict(entry)

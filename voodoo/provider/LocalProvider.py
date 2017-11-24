@@ -13,9 +13,9 @@ class LocalProvider(BaseProvider):
     """
 
     # optional = ('file_name')
-    required_attributes = ('file', 'path', 'package_type')
+    _required_attributes = ('file', 'path', 'package_type')
 
-    typ = 'local'
+    _typ = 'local'
 
     local_base = 'local'
     
