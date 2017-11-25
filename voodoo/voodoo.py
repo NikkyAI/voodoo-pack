@@ -231,7 +231,9 @@ class Voodoo:
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.resolve_dependencies(entry, entries)
-            
+
+            if self.debug:
+                print(f'entries: \n{yaml.dump(entries)}')
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -328,14 +330,15 @@ class Voodoo:
                     excludes.extend(exclude)
                     description = entry.get('description')
                     if description:
-                        prop['description'] += entry_ref + ': ' + description + '\n\n'
-                    if not prop['recommendation']: 
-                        #TODO: check for last dep level
+                        prop['description'] += entry_ref + \
+                            ': ' + description + '\n\n'
+                    if not prop['recommendation']:
+                        # TODO: check for last dep level
                         prop['recommendation'] = entry.get('recommendation')
                     if prop.get('selected') == None:
-                        #TODO: check for last dep level
+                        # TODO: check for last dep level
                         prop['selected'] = entry.get('selected')
-                        
+
                 prop['selected'] = prop.get('selected', False)
                 feature = {
                     'properties': prop,
@@ -394,7 +397,8 @@ class Voodoo:
                     '.modpacks', 'workspace.json')
         Path(path.parent).mkdir(parents=True, exist_ok=True)
 
-        workspace_default = {'packs': [], 'packageListingEntries': [], 'packageListingType': 'STATIC'}
+        workspace_default = {
+            'packs': [], 'packageListingEntries': [], 'packageListingType': 'STATIC'}
         if not path.exists():
             workspace = workspace_default
         else:
@@ -402,11 +406,12 @@ class Voodoo:
                 with open(path, 'r') as workspace_file:
                     workspace = json.load(workspace_file)
                     locations = [p for p in workspace['packs']
-                                if p['location'] == location]
+                                 if p['location'] == location]
             except json.JSONDecodeError:
                 workspace = workspace_default
 
-        locations = [p for p in workspace['packs'] if p['location'] == location]
+        locations = [p for p in workspace['packs']
+                     if p['location'] == location]
         if locations:
             print(f'{location} is already in workspace.json')
             return

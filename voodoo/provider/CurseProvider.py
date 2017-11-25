@@ -99,13 +99,13 @@ class CurseProvider(BaseProvider):
             entry['depends'] = depends
 
             # find duplicat entry
-            dep_entry = next((e for e in entries if e['type'] == 'curse' and e.get(
-                'addon_id') == dep_addon_id), None)
+            dep_entry = next((e for e in entries if (e['type'] == 'curse' and e.get(
+                'addon_id') == dep_addon_id) or e.get('name') == dep_addon['name']), None)
             if not dep_entry:
                 if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and entry.get('optional')):
                     dep_addon_id, dep_file_id, file_name = self.find_file(
                         addon_id=dep_addon_id, mc_version=self.default_mc_version)
-                    dep_addon = self.get_add_on_file(dep_addon_id, dep_file_id)
+                    assert dep_addon_id > 0 and dep_file_id > 0, f"dependency resolution error for {dep_type} dependency {dep_addon['name']} {dep_addon['id']} of {addon['name']} {addon['id']}"
                     if dep_addon_id > 0 and dep_file_id > 0:
                         dep_addon = self.get_add_on(dep_addon_id)
                         dep_entry = {
