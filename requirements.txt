@@ -1,8 +1,7 @@
-pyaml
+ruamel.yaml<0.15
 simplejson
 appdirs
 requests
-mavenpy
-graphviz
 jenkinsapi
-subzero
+xmltodict
+graphviz

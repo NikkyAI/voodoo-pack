@@ -4,6 +4,7 @@ name: Example pack
 mc_version: "1.12.2"
 
 forge: "1.12.2" # `version`(-recommended /-latest) or branch-name
+sponge: release
 
 urls: true
 
@@ -31,15 +32,11 @@ mods:
   - Baubles
   # - Botania
 
-  - <<: [*mvn, *feature]
-    remoteRepository: "http://mvn.rx14.co.uk/local/"
-    group: vazkii.botania
-    artifact: Botania
-    version: "r1.9-341.870"
-    # feature properties
-    description: "test - feature description" # i hope i can get this from maven eventually
-    selected: false
-    recommendation: "starred" # starred or avoid
+  - <<: [*mvn]
+    remote_repository: 'http://maven.covers1624.net'
+    group: cofh
+    artifact: ThermalDynamics
+    version: 1.12
 
   - <<: *curse # it a curse mod
     name: Quark 
@@ -52,8 +49,8 @@ mods:
   # - <<: *direct
   #   url: !join [*asie_mod_archive, Charset/Charset-0.5.0.79.jar]
 
-  - <<: *direct
-    url: !join [*asie_mod_archive, FoamFix/foamfix-0.8.1-1.12-anarchy.jar]
+  # - <<: *direct
+  #   url: !join [*asie_mod_archive, FoamFix/foamfix-0.8.1-1.12-anarchy.jar]
   
   - <<: [*curse, *server]
     name: "Thump"

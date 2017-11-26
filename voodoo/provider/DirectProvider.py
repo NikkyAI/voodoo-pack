@@ -42,14 +42,14 @@ class DirectProvider(BaseProvider):
             cache_path = Path(entry['cache_base'], url_path.parent)
             entry['cache_path'] = str(cache_path)
 
-    def download(self, entry: dict, src_path: Path):
+    def download(self, entry: dict, pack_path: Path):
         url = entry['url']
         if self.debug:
             print(f'downloading {url}')
         dep_cache_dir = Path(entry['cache_path'])
 
         file_name = entry['file_name']
-        file_path = Path(src_path, entry['file_path'])
+        file_path = Path(pack_path, entry['file_path'])
         Path(file_path.parent).mkdir(parents=True, exist_ok=True)
         url = entry['url']
 

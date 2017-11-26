@@ -8,8 +8,4 @@ modpacks: # TODO: turn into list
   'resource_test':
     <<: *modpack
     enabled: false
-  "testpack":
-    <<: *modpack
-    name: base pack
-    enabled: false
   

@@ -6,7 +6,7 @@ __pycache__/
 
 \.vscode/\.ropeproject/
 
-.virtualenv/
+virtualenv/
 
 config/old/
 

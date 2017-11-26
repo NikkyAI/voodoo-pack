@@ -230,8 +230,14 @@ class BaseProvider:
     def resolve_path(self, entry: dict):
         package_type = entry.get('package_type') or 'mod'
         path = Path(entry.get('path') or 'mods')
+        if package_type == 'loader':
+            entry['path'] = 'loaders'
+            entry['file_path'] = str(Path(path, entry.get(
+            'file_name')))
+            return
         entry['target_path'] = str(Path(path, entry.get(
             'file_name')))
+        path = Path('src', path)
         if package_type == 'mod':
             side = entry.get('side') or 'both'
             if side.lower() == 'both':

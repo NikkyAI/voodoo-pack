@@ -1,28 +1,25 @@
-setup:
-	pip install --user virtualenv
-	virtualenv .virtualenv
-	( \
-	    source .virtualenv/bin/activate; \
-	    pip install -r requirements.txt; \
-	)
+venv: virtualenv/bin/activate
+virtualenv/bin/activate: requirements.txt
+	test -d virtualenv || virtualenv virtualenv
+	virtualenv/bin/pip install -r requirements.txt
+	touch virtualenv/bin/activate
 
 install:
-	pip install --user subzero
 	pip uninstall voodoo -y; true
-	pip install --user --force .
+	pip install --user .
 
 uninstall:
 	pip uninstall voodoo -y
 
-run:
+run: venv
 	( \
-	    source .virtualenv/bin/activate; \
+	    source virtualenv/bin/activate; \
 	    python -m voodoo -c config/config.yaml; \
 	)
 
-run-debug:
+run-debug: venv
 	( \
-	    source .virtualenv/bin/activate; \
+	    source virtualenv/bin/activate; \
 	    python -m voodoo -c config/config.yaml --debug; \
 	)
 

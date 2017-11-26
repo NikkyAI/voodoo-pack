@@ -96,6 +96,14 @@ following properties can be set in `config.yaml` or `{pack_name}.yaml` **and may
   - required
   - default: `1.12.2`
 
+- `sponge`: str \
+  sponge forge version
+  - optional
+  - default: `null`
+  - values
+    - `release`
+    - version
+
 - `forge`: str or int \
   forge version \
   settings other than `recommended`, `latest` or a build_number \
@@ -148,7 +156,8 @@ name: Example pack
 
 mc_version: "1.12.2"
 
-forge: "latest" # `version`(-recommended /-latest) or branch-name
+sponge: release
+#forge: "latest" # `version`(-recommended /-latest) or branch-name
 
 urls: true
 
@@ -165,8 +174,6 @@ provider_settings:
     <<: *local_settings
     folder: local
 
-asie_mod_archive: &asie_mod_archive: https://asie.pl/files/mods/
-
 mods:
 
   - <<: *curse # it a curse mod
@@ -174,15 +181,11 @@ mods:
 
   - Baubles # just the curse mod name works as well
 
-  - <<: [*mvn, *feature] # not yet integrated
-    remoteRepository: "http://mvn.rx14.co.uk/local/"
-    group: vazkii.botania
-    artifact: Botania
-    version: "r1.9-341.870"
-    # feature properties
-    description: "test - feature descriotion" # i hope i can get this from maven eventually
-    selected: false
-    recommendation: "starred" # starred or avoid
+  - <<: [*mvn]
+    remote_repository: 'http://maven.covers1624.net'
+    group: cofh
+    artifact: ThermalDynamics
+    version: 1.12
 
   - <<: *github # not yet integrated
     user: copygirl
@@ -190,10 +193,7 @@ mods:
     tag: v1.1.0.2-beta
 
   - <<: *direct
-    url: !join [*asie_mod_archive, Charset/Charset-0.5.0.79.jar] # join strings
-
-  - <<: *direct
-    url: !join [*asie_mod_archive, FoamFix/foamfix-0.8.1-1.12-anarchy.jar]
+    url: !join https://asie.pl/files/mods/FoamFix/foamfix-0.8.1-1.12-anarchy.jar
 
   - <<: [*curse, *client, *feature]
     name: "NoNausea"

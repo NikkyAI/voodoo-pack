@@ -4,6 +4,7 @@ import argparse
 import io
 import sys
 import traceback
+import warnings
 from itertools import groupby
 from pathlib import Path
 from shutil import rmtree
@@ -12,15 +13,18 @@ from typing import Any, Dict, List, Tuple
 import appdirs
 import requests
 import simplejson as json
-import yaml
+import ruamel.yaml as yaml
+from ruamel.yaml.error import ReusedAnchorWarning
 
 from .cftypes import DependencyType, RLType
 from .dependency_graph import generate_graph
 from .loader import Loader
 from .provider import *
 
+warnings.simplefilter("ignore", ReusedAnchorWarning)
 
-def main():  # TODO: move to __main__
+
+def main():  # TODO: move to __main__ ?
     parser = argparse.ArgumentParser(
         description='Download mods from curseforge and other sources')
     parser.add_argument('packs', nargs='*', default=[], help='packs')
@@ -40,6 +44,7 @@ def main():  # TODO: move to __main__
 
 class Voodoo:
     forge_data = None
+    sponge_entry = None
 
     def __init__(self, config, debug, packs):
         self.debug = debug
@@ -68,7 +73,7 @@ class Voodoo:
             self.config_str = output.getvalue()
             output.close()
 
-            self.global_config = yaml.load(self.config_str, Loader)
+            self.global_config = yaml.safe_load(self.config_str)
             if self.debug:
                 print(yaml.dump(self.global_config))
             self.config_path = config_dir
@@ -93,14 +98,15 @@ class Voodoo:
         if self.packs:
             for pack in self.packs:
                 meta_config = self.global_config['modpacks'].get(pack, {})
+                meta_config['enabled'] = True
                 self.process_pack(
-                    pack_base=pack, meta_config=meta_config, disable_skip=True)
+                    pack_base=pack, meta_config=meta_config)
         else:
             for pack, meta_config in self.global_config['modpacks'].items():
                 self.process_pack(pack_base=pack, meta_config=meta_config)
 
     def process_pack(self, pack_base: str, meta_config: dict = {}, disable_skip: bool = False):
-        if not meta_config.get('enabled', True) and not disable_skip:
+        if not meta_config.get('enabled', True):
             print(f'skipped {pack_base}')
             return
         else:
@@ -118,7 +124,7 @@ class Voodoo:
         config_str = output.getvalue()
         output.close()
         try:
-            pack_config = yaml.load(config_str, Loader)
+            pack_config = yaml.safe_load(config_str)
         except yaml.YAMLError as exc:
             print('failed loading yaml')
             temp_path = Path(self.config_path, 'fail')
@@ -155,7 +161,8 @@ class Voodoo:
         mc_version = [str(v) for v in mc_version]
         assert mc_version, 'no Minecraft version defined'
         forge_version = pack_config.get('forge')
-        assert forge_version, 'no Forge version defined'
+        sponge_version = pack_config.get('sponge')
+        assert forge_version or sponge_version, 'no Forge or Sponge version defined'
 
         provider_settings = pack_config.get('provider_settings', {})
         provider_args = {'debug': self.debug, 'output_path': output_path, 'data_path': data_path,
@@ -194,7 +201,7 @@ class Voodoo:
                     entry_id = entry.get('name') or entry.get(
                         'url') or str(entry)
                     all_missing[entry_id] = missing
-            assert not fail, f'missing values'
+            assert not fail, f'{check_name} missing values {all_missing}'
             # raise KeyError(all_missing)
 
         entries = []
@@ -204,6 +211,9 @@ class Voodoo:
             if provider:
                 entry = provider.convert(mod)
                 entries.append(dict(entry))
+
+        if sponge_version:
+            entries.append(self.get_sponge(sponge_version))
         try:
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -212,6 +222,13 @@ class Voodoo:
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
                 provider.prepare_dependencies(entry)
+
+            # add forge
+            forge_entry = self.get_forge(forge_version, mc_version)
+            print(Path(output_path, forge_entry['path']).resolve())
+            rmtree(
+                str(Path(output_path, forge_entry['path']).resolve()), ignore_errors=True)
+            entries.append(forge_entry)
 
             remove = []
             for entry in entries:
@@ -265,11 +282,6 @@ class Voodoo:
 
             src_path = Path(output_path, 'src')
 
-            forge_entry = self.get_forge(forge_version, mc_version)
-            rmtree(
-                str(Path(output_path, forge_entry['path']).resolve()), ignore_errors=True)
-            entries.append(forge_entry)
-
             # resolve full path
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
@@ -283,7 +295,7 @@ class Voodoo:
             # TODO: github, jenkins
 
             # clear old mods
-            mod_path = Path(src_path, 'mods')
+            mod_path = Path(output_path, 'src', 'mods')
             rmtree(str(mod_path.resolve()), ignore_errors=True)
             mod_path.mkdir(parents=True, exist_ok=True)
 
@@ -295,7 +307,7 @@ class Voodoo:
                 # requires path to be known
                 for entry in entries:
                     provider: BaseProvider = provider_map[entry['type']]
-                    provider.write_direct_url(entry, src_path)
+                    provider.write_direct_url(entry, output_path)
 
             if self.debug:
                 print(
@@ -305,7 +317,7 @@ class Voodoo:
 
             for entry in entries:
                 provider: BaseProvider = provider_map[entry['type']]
-                provider.download(entry, src_path)
+                provider.download(entry, output_path)
 
         # TODO: generate modpack.json
 
@@ -475,9 +487,35 @@ class Voodoo:
             version, int), 'version should be resolved to buildnumber'
 
     def get_forge(self, version, mcversion: List[str]):
+        if self.sponge_entry:
+            sponge_version = self.sponge_entry['version']
+            print(sponge_version)
+            version = int(sponge_version.split('-')[1])
         url, file_name, longversion = self.get_forge_url(version, mcversion)
         cache_dir = Path(Path(self.cache_dir, 'forge'), str(longversion))
 
-        entry = {'type': 'direct', 'cache_path': str(cache_dir), 'url': url, 'file_name': file_name,
-                 'path': '../loaders', 'name': 'Minecraft Forge'}
+        entry = dict(
+            type='direct',
+            name='Minecraft Forge',
+            cache_path=str(cache_dir),
+            url=url,
+            file_name=file_name,
+            package_type='loader',
+            path='loaders',
+        )
+        return entry
+
+    def get_sponge(self, sponge_version):
+        entry = dict(
+            type='mvn',
+            name='Sponge Forge',
+            remote_repository="https://repo.spongepowered.org/maven/",
+            group='org.spongepowered',
+            artifact='spongeforge',
+            version=sponge_version,
+            package_type='mod',
+            path='mods',
+            side='server',
+        )
+        self.sponge_entry = entry
         return entry

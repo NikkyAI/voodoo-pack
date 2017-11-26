@@ -35,7 +35,7 @@ class CurseProvider(BaseProvider):
 
     optional = False
     release_types = [str(RLType.Release), str(RLType.Beta)]
-    meta_url: str = '---https://cursemeta.nikky.moe'
+    meta_url: str = 'https://cursemeta.nikky.moe'
     dump_data = True
 
     def __init__(self, *args, **kwargs):  # optional, default_release_types,

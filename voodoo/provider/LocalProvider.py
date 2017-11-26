@@ -24,10 +24,10 @@ class LocalProvider(BaseProvider):
             entry['name'] = Path(entry['file']).resolve().name.rstrip('.jar')
         
     def fill_information(self, entry: dict):
-        # if not 'name' in entry:
-        #     entry['name'] = Path(entry['file']).resolve().name.rstrip('.jar')
         if not 'file_name' in entry:
             entry['file_name'] = Path(entry['file']).resolve().name
+        if not 'name' in entry:
+            entry['name'] = entry['file_name'].rstrip('.jar')
         super().fill_information(entry)
 
     def validate(self, entry: dict) -> bool:
@@ -37,12 +37,12 @@ class LocalProvider(BaseProvider):
     def write_direct_url(self, entry: dict, src_path: Path):
         pass
 
-    def download(self, entry: dict, src_path: Path):
-        file_src = Path(entry['file'])
-        if(not os.path.isabs(file_src)):
-            file_src = Path(src_path.parent, self.local_base, entry['file']).resolve()
-        file_name = entry.get('file_name', file_src.name)
-        path = Path(src_path, entry['path']).resolve()
+    def download(self, entry: dict, pack_path: Path):
+        file_path = Path(entry['file'])
+        if(not os.path.isabs(file_path)):
+            file_path = Path(pack_path, self.local_base, entry['file']).resolve()
+        file_name = entry.get('file_name', file_path.name)
+        path = Path(pack_path, entry['path']).resolve()
         path = path / file_name
-        shutil.copyfile(str(file_src), str(path))
+        shutil.copyfile(str(file_path), str(path))
         print(f"copied {file_name}")
