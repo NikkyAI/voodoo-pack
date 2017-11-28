@@ -11,9 +11,10 @@ from shutil import rmtree
 from typing import Any, Dict, List, Tuple
 
 import appdirs
+import pkg_resources
 import requests
-import simplejson as json
 import ruamel.yaml as yaml
+import simplejson as json
 from ruamel.yaml.error import ReusedAnchorWarning
 
 from .cftypes import DependencyType, RLType
@@ -62,11 +63,12 @@ class Voodoo:
 
         config_suffix = self.config_path.suffix
         if config_suffix == '.yaml':
-            default_config_path = config_dir / 'default.yaml'
             config_dir.mkdir(parents=True, exist_ok=True)
             output = io.StringIO()
-            with open(default_config_path) as infile:
-                output.write(infile.read())
+
+            default_config = pkg_resources.resource_string(__name__, 'data/default.yaml').decode()
+            output.write(default_config)
+            
             output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
             with open(self.config_path) as infile:
                 output.write(infile.read())

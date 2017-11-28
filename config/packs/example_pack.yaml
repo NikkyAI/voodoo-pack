@@ -29,17 +29,17 @@ include:
 asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
 
 mods:
-  - Baubles
+  # - Baubles
   # - Botania
 
-  - <<: [*mvn]
-    remote_repository: 'http://maven.covers1624.net'
-    group: cofh
-    artifact: ThermalDynamics
-    version: 1.12
+  # - <<: [*mvn]
+  #   remote_repository: 'http://maven.covers1624.net'
+  #   group: cofh
+  #   artifact: ThermalDynamics
+  #   version: 1.12
 
-  - <<: *curse # it a curse mod
-    name: Quark 
+  # - <<: *curse # it a curse mod
+  #   name: Quark 
 
   - <<: *github # to be implemented again soon(tm)
     user: copygirl

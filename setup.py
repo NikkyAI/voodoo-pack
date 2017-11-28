@@ -10,6 +10,7 @@ setup(
     author_email='root@nikky.moe',
     license='LGPL',
     packages=find_packages(),
+    package_data={'voodoo': ['data/*.yaml']},
     install_requires=[
         'ruamel.yaml<0.15',
         'simplejson',
