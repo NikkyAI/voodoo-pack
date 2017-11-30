@@ -71,11 +71,11 @@ install python-virtualenv
 
 ## windows
 
-**not supported** due to requiring graphviz binaries to be on the PATH, the rest should work
+**not recommended** for general usage due to requiring graphviz binaries to be on the PATH, and maybe otherwindows things that can mess up
 
 1. install python https://www.python.org/ftp/python/3.6.3/python-3.6.3.exe
 2. install graphviz and make sure its on the path \
-   https://www.graphviz.org/download/
+   https://graphviz.gitlab.io/_pages/Download/Download_windows.html
 2. download the latest version of the repo \
    `git clone https://github.com/NikkyAI/voodoo-pack.git`
 3. install \
