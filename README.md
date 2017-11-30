@@ -291,7 +291,7 @@ list of entries
 example entries
 
 ```yaml
-- <<: [*featue, *curse]
+- <<: [*feature, *curse]
   name: JourneyMap
   version: map-1.10.2
   release_type:
