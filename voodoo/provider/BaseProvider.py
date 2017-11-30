@@ -65,7 +65,7 @@ class BaseProvider:
         if path.exists():
             with open(path, 'r') as stream:
                 try:
-                    global_defaults = yaml.load(stream)
+                    global_defaults = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
                     print(exc)
                     global_defaults = {}

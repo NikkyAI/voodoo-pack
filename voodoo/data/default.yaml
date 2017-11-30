@@ -38,6 +38,7 @@ pack_defaults:
 
   curse: &curse
     type: curse
+    # file_name_regex: '.*(?<!-deobf\.jar)$'
     # name: null
     # id: null
     # package_type: mod
@@ -62,7 +63,7 @@ pack_defaults:
     # version: null
     package_type: mod
     path: mods
-  
+
   jenkins: &jenkins
     type: jenkins
     # jenkins_url: null

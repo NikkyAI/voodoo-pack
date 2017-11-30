@@ -24,7 +24,7 @@ caches downloaded mods to avoid redownloading for `curse`, `jenkins` and `github
 
 ## setup and execution
 
-instal graphviz
+install graphviz
 
 execute `make install-required` or `pip install --user -r requirements.txt` once to install the required packages
 

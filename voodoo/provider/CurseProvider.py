@@ -1,5 +1,6 @@
 from itertools import groupby
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Mapping, Tuple
 
 import requests
@@ -37,6 +38,7 @@ class CurseProvider(BaseProvider):
     release_types = [str(RLType.Release), str(RLType.Beta)]
     meta_url: str = 'https://cursemeta.nikky.moe'
     dump_data = True
+    file_name_regex = r'.*(?<!-deobf\.jar)$'
 
     def __init__(self, *args, **kwargs):  # optional, default_release_types,
         super().__init__(*args, **kwargs)
@@ -65,7 +67,7 @@ class CurseProvider(BaseProvider):
     def prepare_dependencies(self, entry: dict):
         # get addon_id, file_id
         param = {k: entry[k] for k in (
-            'addon_id', 'name', 'mc_version', 'version', 'release_types') if k in entry}
+            'addon_id', 'name', 'mc_version', 'version', 'release_types', 'file_name_regex') if k in entry}
         addon_id, file_id, file_name = self.find_file(**param)
         entry['addon_id'] = addon_id
         entry['file_id'] = file_id
@@ -104,7 +106,7 @@ class CurseProvider(BaseProvider):
             if not dep_entry:
                 if dep_type == DependencyType.Required or (dep_type == DependencyType.Optional and entry.get('optional')):
                     dep_addon_id, dep_file_id, file_name = self.find_file(
-                        addon_id=dep_addon_id, mc_version=self.default_mc_version)
+                        addon_id=dep_addon_id, mc_version=self.default_mc_version, file_name_regex=self.file_name_regex)
                     assert dep_addon_id > 0 and dep_file_id > 0, f"dependency resolution error for {dep_type} dependency {dep_addon['name']} {dep_addon['id']} of {addon['name']} {addon['id']}"
                     if dep_addon_id > 0 and dep_file_id > 0:
                         dep_addon = self.get_add_on(dep_addon_id)
@@ -246,8 +248,9 @@ class CurseProvider(BaseProvider):
     def find_file(self, mc_version: List[str] = None,
                   name: str = None,
                   version: str = None,
-                  release_types: List[Any] = None,
-                  addon_id: int = None
+                  release_types: List[Any] = list(release_types),
+                  addon_id: int = None,
+                  file_name_regex = file_name_regex
                   ) -> Tuple[int, int, str]:
 
         if not release_types:
@@ -274,14 +277,15 @@ class CurseProvider(BaseProvider):
         addon_id = addon["id"]
 
         #description = get_add_on_description(id)
-
+        p = re.compile(file_name_regex)
         files = self.get_add_on_all_files(addon_id)
         # TODO improve and add version detection
         # ModVersion in f['file_name']
         files = [f for f in files
                  if version and version in f['fileName'] or not version
                  and any(version in mc_version for version in f['gameVersion'])
-                 and RLType.get(f['releaseType']) in release_types]
+                 and RLType.get(f['releaseType']) in release_types
+                 and p.fullmatch(f['fileName'])]
         if files:
             # sort by date
             files.sort(key=lambda x: x['fileDate'], reverse=True)
