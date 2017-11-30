@@ -30,6 +30,42 @@ execute `make install-required` or `pip install --user -r requirements.txt` once
 
 execute `make run` or `python -m voodoo` to execute the pack builder
 
+## linux
+
+**recommended**
+
+1. install python 3.6+
+2. install graphviz
+3. download and install \
+  ```sh
+  git -c voodoo-pack pull || git clone https://github.com/NikkyAI/voodoo-pack.git
+  cd voodoo-pack
+  pip uninstall -y voodoo
+  pip install --user .
+  ```
+4. copy the defaults and start working \
+  ```sh
+  PACKDEV='~/dev/modpacks'
+  mkdir -p $PACKDEV
+  cp -r config $PACKDEV
+  cd $PACKDEV
+  voodoo
+  ```
+
+## windows
+
+**not supported** due to requiring graphviz binaries to be on the PATH, the rest should work
+
+1. install python https://www.python.org/ftp/python/3.6.3/python-3.6.3.exe
+2. install graphviz and make sure its on the path \
+   https://www.graphviz.org/download/
+2. download the latest version of the repo \
+   `git clone https://github.com/NikkyAI/voodoo-pack.git`
+3. install \
+   `pip uninstall -y voodoo && pip install .`
+4. run in some othert directory \
+   `voodoo`
+
 ## Configuration
 
 ### main config file
