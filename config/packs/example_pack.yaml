@@ -26,8 +26,6 @@ provider_settings:
 include:
   - base_pack
 
-asie_mod_archive: &asie_mod_archive https://asie.pl/files/mods/
-
 mods:
   # - Baubles
   # - Botania

@@ -36,13 +36,30 @@ execute `make run` or `python -m voodoo` to execute the pack builder
 
 1. install python 3.6+
 2. install graphviz
-3. download and install \
+3. download the latest source \
   ```sh
   git -c voodoo-pack pull || git clone https://github.com/NikkyAI/voodoo-pack.git
   cd voodoo-pack
+  ```
+
+### user install
+  ```sh
   pip uninstall -y voodoo
   pip install --user .
   ```
+
+### virtualenv install
+
+install python-virtualenv
+
+4. execute the comamnds \
+  ```sh
+  virtualenv virtualenv
+  source virtualenv/bin/activate
+  pip uninstall -y voodoo
+  pip install .
+  ```
+
 4. copy the defaults and start working \
   ```sh
   PACKDEV='~/dev/modpacks'

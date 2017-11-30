@@ -97,4 +97,7 @@ def generate_graph(entries: List[dict], path: Path, pack_name: str):
 
     dot.attr(label=f'\n\n{pack_name}')
     dot.attr(fontsize='20')
-    dot.render()
+    try:
+        dot.render()
+    except:
+        print('graphviz failed')
