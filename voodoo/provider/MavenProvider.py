@@ -3,7 +3,6 @@ from urllib.parse import quote, unquote, urljoin, urlparse, urlunsplit
 
 import requests
 import xmltodict
-from mavenpy.run import Maven
 
 from .BaseProvider import BaseProvider
 

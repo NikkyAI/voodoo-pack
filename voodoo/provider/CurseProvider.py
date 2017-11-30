@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Tuple
 
 import requests
-import yaml
+import ruamel.yaml as yaml
 
 from ..cftypes import *
 from .BaseProvider import BaseProvider

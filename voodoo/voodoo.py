@@ -19,7 +19,6 @@ from ruamel.yaml.error import ReusedAnchorWarning
 
 from .cftypes import DependencyType, RLType
 from .dependency_graph import generate_graph
-from .loader import Loader
 from .provider import *
 
 warnings.simplefilter("ignore", ReusedAnchorWarning)

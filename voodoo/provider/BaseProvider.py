@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import unquote
 
-import yaml
+import ruamel.yaml as yaml
 
 __all__ = ['BaseProvider']
 
