@@ -37,8 +37,8 @@ class BaseProvider:
             print(f'{self._typ.upper()} Provider .ctor')
         
         if not self._base_instance:
-            self.instance = self.__class__.__bases__[0]()
-        base_attributes = inspect.getmembers(self.instance, lambda a:not(inspect.isroutine(a)))
+            self._base_instance = self.__class__.__bases__[0]()
+        base_attributes = inspect.getmembers(self._base_instance, lambda a:not(inspect.isroutine(a)))
         base_keys = [a[0] for a in base_attributes if not(a[0].startswith('_'))]
         # base_keys = ['debug', 'default_mc_version']
 
@@ -258,9 +258,8 @@ class BaseProvider:
         url = entry.get('url')
         if url:
             url = unquote(entry['url'])
-            full_path = src_path / entry['file_path']
-            url_path = Path(f"{full_path}.url.txt").resolve()
-            url_path.parent.mkdir(parents=True, exist_ok=True)
+            url_path = Path(src_path, f"{entry['file_path']}.url.txt").resolve(strict=False)
+            Path(url_path.parent).mkdir(parents=True, exist_ok=True)
 
             with open(url_path, "wb") as urlFile:
                 urlFile.write(str.encode(url))

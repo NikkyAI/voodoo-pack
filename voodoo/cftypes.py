@@ -13,7 +13,11 @@ class RLType(Enum):
         if isinstance(v, int):
             return [t for t in RLType if t.value == v][0]
         if isinstance(v, str):
-            return [t for t in RLType if t.name.lower() == v.lower()][0]
+            try:
+                return [t for t in RLType if t.name.lower() == v.lower()][0]
+            except IndexError:
+                print(f'no release type: {v}')
+                return None
 
     def __lt__(self, other: 'RLType'):
         return self.value < other.value
@@ -37,7 +41,11 @@ class DependencyType(Enum):
         if isinstance(v, int):
             return [t for t in DependencyType if t.value == v][0]
         if isinstance(v, str):
-            return [t for t in DependencyType if t.name.lower() == v.lower()][0]
+            try:
+                return [t for t in DependencyType if t.name.lower() == v.lower()][0]
+            except IndexError:
+                print(f'no dependency type: {v}')
+                return None
 
     def __lt__(self, other: 'DependencyType'):
         return self.value < other.value
@@ -54,15 +62,15 @@ class Side(IntFlag):
     Server = 2
     Both = 3
 
-    @staticmethod
-    def get(v):
+    @classmethod
+    def get(cls, v):
         if isinstance(v, Side):
             return v
         if isinstance(v, int):
             return [t for t in Side if t.value == v][0]
         if isinstance(v, str):
             if v == '':
-                return Both
+                return cls.Both
             return [t for t in Side if t.name.lower() == v.lower()][0]
 
     def __lt__(self, other: 'Side'):

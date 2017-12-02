@@ -282,7 +282,7 @@ class CurseProvider(BaseProvider):
         # TODO improve and add version detection
         # ModVersion in f['file_name']
         files = [f for f in files
-                 if version and version in f['fileName'] or not version
+                 if version and str(version) in f['fileName'] or not version
                  and any(version in mc_version for version in f['gameVersion'])
                  and RLType.get(f['releaseType']) in release_types
                  and p.fullmatch(f['fileName'])]

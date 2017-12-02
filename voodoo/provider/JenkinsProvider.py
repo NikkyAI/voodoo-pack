@@ -20,6 +20,8 @@ class JenkinsProvider(BaseProvider):
 
     __servers: Dict[str, Jenkins] = {}
 
+    file_name_regex = '.*(?<!-sources\.jar)(?<!-api\.jar)$'
+
     def validate(self, entry: dict) -> bool:
         return True
 
