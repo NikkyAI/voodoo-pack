@@ -27,4 +27,10 @@ run-debug: venv
 	    PYTHONPATH=PYTHONPATH:${current_dir} python -m voodoo -c config/config.yaml --debug; \
 	)
 
+gui: venv
+	( \
+	    source ${current_dir}/virtualenv/bin/activate; \
+	    PYTHONPATH=PYTHONPATH:${current_dir} python -m voodoo-gui ; \
+	)
+
 .PHONY: setup install run run-debug

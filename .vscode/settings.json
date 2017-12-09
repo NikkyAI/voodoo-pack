@@ -3,5 +3,6 @@
         "virtualenv/": false
         "**/__pycache__/": true
     },
+    "python.moduleName": 'voodoo',
     "python.pythonPath": "${workspaceRoot}/virtualenv/bin/python"
 }

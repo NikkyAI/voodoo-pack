@@ -1,7 +1,10 @@
 ruamel.yaml<0.15
+pyaml
 simplejson
 appdirs
 requests
 jenkinsapi
 xmltodict
 graphviz
+pycallgraph
+PyQt5

@@ -1,0 +1,40 @@
+!list &list
+overrides:
+  side: !prop {enabled: true, value: client}
+entries:
+- !prop
+  enabled: false
+  value: !jenkins
+    description: !prop {enabled: true, value: 'describe somethin here'}
+    feature: !prop {enabled: true, value: null}
+    side: !prop {enabled: true, value: server}
+    name: !prop {enabled: false, value: some-name}
+- !prop
+  enabled: true
+  value: !curse
+    addon_id: !prop {enabled: true, value: 0}
+    description: !prop {enabled: false, value: ''}
+    feature: !prop {enabled: true, value: null}
+    file: !prop {enabled: false, value: something}
+    # name: !prop {enabled: false, value: some-name} # unnamed
+    side: !prop {enabled: false, value: client}
+- !list
+  overrides:
+    side: !prop {enabled: true, value: client}
+  entries:
+  - !prop
+    enabled: false
+    value: !jenkins
+      description: !prop {enabled: true, value: ''}
+      feature: !prop {enabled: true, value: null}
+      side: !prop {enabled: true, value: server}
+  - !prop
+    enabled: true
+    value: !curse
+      addon_id: !prop {enabled: true, value: 0}
+      description: !prop {enabled: false, value: ''}
+      feature: !prop {enabled: true, value: null}
+      file: !prop {enabled: false, value: something}
+      name: !prop {enabled: false, value: some-name}
+      side: !prop {enabled: false, value: client}
+  

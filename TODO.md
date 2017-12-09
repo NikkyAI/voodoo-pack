@@ -1,3 +1,6 @@
+make Entries also wrapped by Property
+
+
 register handlers for types: [ curse, github, maven, jenkins, direct, local ]
 
 ## split resolve and download

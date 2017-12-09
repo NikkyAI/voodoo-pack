@@ -1,0 +1,84 @@
+import sys
+import os.path
+from pathlib import Path
+
+import yaml
+from .entry import *
+
+# class LoaderMeta(type):
+
+#     def __new__(metacls, __name__, __bases__, __dict__):
+#         """Add include constructer to class."""
+
+#         # register the include constructor on the class
+#         cls = super().__new__(metacls, __name__, __bases__, __dict__)
+#         cls.add_constructor('!include', cls.construct_include)
+#         # cls.add_constructor('!join', cls.join)
+
+#         # Required for safe_load
+#         cls.add_constructor('!list', ListTag.from_yaml)
+#         # Required for safe_dump
+#         cls.add_multi_representer(ListTag, ListTag.to_yaml)
+
+#         return cls
+
+
+# class Loader(yaml.Loader, metaclass=LoaderMeta):
+#     """YAML Loader with `!include` constructor."""
+
+#     def __init__(self, stream):
+#         """Initialise Loader."""
+
+#         try:
+#             self._root = os.path.split(stream.name)[0]
+#         except AttributeError:
+#             self._root = os.path.curdir
+
+#         super().__init__(stream)
+
+#     def construct_include(self, node):
+#         """Include file referenced at node."""
+
+#         filename = os.path.abspath(os.path.join(
+#             self._root, self.construct_scalar(node)
+#         ))
+#         extension = os.path.splitext(filename)[1].lstrip('.')
+
+#         with open(filename, 'r') as f:
+#             if extension in ('yaml', 'yml'):
+#                 return yaml.load(f, Loader)
+#             else:
+#                 return ''.join(f.readlines())
+
+#     # define custom tag handler
+#     def join(loader, node):
+#         seq = loader.construct_sequence(node)
+#         return ''.join([str(i) for i in seq])
+
+def yaml_test():
+    with open('test.yaml', 'r') as stream:
+        data = yaml.safe_load(stream)
+
+    print('loading...')
+    print(data)
+
+    curse_entry = CurseEntry(addon_id=1234, name='somename', side=Property('client'), file=Property('something'))
+
+    listing = EntryList([curse_entry, BaseEntry(Property('jenkins'), Property('server'))], {'side': Property('client')})
+    print(listing)
+
+    print('dumping')
+    print(yaml.safe_dump(listing))
+
+    curse_entry.name.enabled = False
+
+    print(curse_entry)
+
+    print(curse_entry.name.enabled)
+
+
+    # settings = yaml.safe_load(settings_file)
+    # print(settings)
+
+    # s = yaml.safe_dump(settings)
+    # print(s)
