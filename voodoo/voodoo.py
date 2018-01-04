@@ -369,8 +369,8 @@ class Voodoo:
                 'gameVersion': str(mc_version[0]),
                 'features': features_list,
                 'userFiles': {
-                    'include': ['options.txt', 'optionsshaders.txt'],
-                    'exclude': []
+                    'include': pack_config.get('userFiles_include') or ['options.txt', 'optionsshaders.txt'],
+                    'exclude': pack_config.get('userFiles_exclude') or []
                 },
                 'launch': {
                     'flags': [
