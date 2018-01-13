@@ -54,7 +54,7 @@ class JenkinsProvider(BaseProvider):
             entry['cache_base'] = str(cache_base)
         if 'cache_path' not in entry:
             entry['cache_path'] = str(
-                Path(entry['cache_base'], *job_name.split('/')))
+                Path(entry['cache_base'], *job_name.split('/'), str(entry['build_number'])))
 
     def get_server(self, url: str) -> Jenkins:
         server = self.__servers.get(url)
