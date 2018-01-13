@@ -26,11 +26,19 @@ caches downloaded mods to avoid redownloading for `curse`, `jenkins` and `github
 
 install graphviz
 
+### development
+
 execute `make install-required` or `pip install --user -r requirements.txt` once to install the required packages
 
-execute `make run` or `python -m voodoo` to execute the pack builder
+execute `make run` or `python -m voodoo` to execute in the dev environment
 
-## linux
+### production
+
+execute `voodoo` in your pack-dev folder (anywhere outside this repo) containing `config/`
+
+## install
+
+### linux
 
 **recommended**
 
@@ -42,13 +50,14 @@ execute `make run` or `python -m voodoo` to execute the pack builder
   cd voodoo-pack
   ```
 
-### user install
+#### user install
+
   ```sh
   pip uninstall -y voodoo
   pip install --user .
   ```
 
-### virtualenv install
+#### virtualenv install
 
 install python-virtualenv
 
@@ -69,7 +78,7 @@ install python-virtualenv
   voodoo
   ```
 
-## windows
+### windows
 
 **not recommended** for general usage due to requiring graphviz binaries to be on the PATH, and maybe otherwindows things that can mess up
 
