@@ -27,7 +27,7 @@ warnings.simplefilter("ignore", ReusedAnchorWarning)
 def main():  # TODO: move to __main__ ?
     parser = argparse.ArgumentParser(
         description='Download mods from curseforge and other sources')
-    parser.add_argument('packs', nargs='*', default=[], help='packs')
+    parser.add_argument('pack', help='pack definition file')
     parser.add_argument(
         '-c', '--config', default='config/config.yaml', help='config file')
     # parser.add_argument('--auth', help='auth file for github login')
@@ -46,12 +46,12 @@ class Voodoo:
     forge_data = None
     sponge_entry = None
 
-    def __init__(self, config, debug, packs):
+    def __init__(self, config, debug, pack):
         self.debug = debug
         if self.debug:
             print('using encoding {}'.format(sys.stdout.encoding))
         self.config_path = Path(config).resolve()
-        self.packs = packs
+        self.pack = pack
 
         self.cache_dir = appdirs.AppDirs(
             appname='voodoo', appauthor='nikky').user_cache_dir
@@ -69,6 +69,14 @@ class Voodoo:
             output.write(default_config)
             
             output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
+            if not self.config_path.exists():
+                default_config = """\
+output: modpacks
+temp_path: build
+"""
+                with open(self.config_path, 'w') as outfile:
+                    outfile.write(default_config)
+
             with open(self.config_path) as infile:
                 output.write(infile.read())
             self.config_str = output.getvalue()
@@ -96,22 +104,10 @@ class Voodoo:
         #     auth['github'] = auth_github
 
     def process_packs(self):
-        if self.packs:
-            for pack in self.packs:
-                meta_config = self.global_config['modpacks'].get(pack, {})
-                meta_config['enabled'] = True
-                self.process_pack(
-                    pack_base=pack, meta_config=meta_config)
-        else:
-            for pack, meta_config in self.global_config['modpacks'].items():
-                self.process_pack(pack_base=pack, meta_config=meta_config)
+        self.process_pack(pack_base=self.pack)
 
-    def process_pack(self, pack_base: str, meta_config: dict = {}, disable_skip: bool = False):
-        if not meta_config.get('enabled', True):
-            print(f'skipped {pack_base}')
-            return
-        else:
-            print(f'processing {pack_base}')
+    def process_pack(self, pack_base: str):
+        print(f'processing {pack_base}')
 
         pack_config_base = Path(
             self.config_path, self.global_config.get('packs'))
@@ -137,7 +133,6 @@ class Voodoo:
                 f'written failing yaml to {temp_path} \nfailed parsing config {exc}')
             exit(-1)
         # apply config overrides
-        pack_config == {**pack_config, **meta_config}
 
         temp_path = pack_config.get('temp_path')
         if temp_path:

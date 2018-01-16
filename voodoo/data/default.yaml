@@ -1,11 +1,6 @@
-# global defaults
 
-defaults:
-  modpack: &modpack
-    enabled: true
 
 # pack defaults
-enabled: true
 output: modpacks
 packs: packs
 pata_path: data

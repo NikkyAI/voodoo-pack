@@ -100,29 +100,18 @@ example:
 `config/config.yaml`
 
 ```yaml
-modpacks: # TODO: turn into list
-  "example_pack":
-    <<: *modpack
-  "testpack":
-    <<: *modpack
-    name: renamed pack
-  "unusedpack":
-    <<: *modpack
-    name: disabled pack
-    enabled: false
 output: modpacks
+output: modpacks
+packs: packs
+pata_path: data
 urls: true
+temp_path: build
 ```
 
 - `packs`: str \
   path to the config directory of modpacks
   - optional
   - default: `packs/`
-
-- `modpacks`: Dict[str, overrides] \
-  list of modpack names and overrides that will be applied \
-  to the pack config, allows to change versions or override `enabled`
-  - required
 
 following properties can be set in `config.yaml` or `{pack_name}.yaml` **and may be overridden**
 
