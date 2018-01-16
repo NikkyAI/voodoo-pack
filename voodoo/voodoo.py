@@ -69,16 +69,12 @@ class Voodoo:
             output.write(default_config)
             
             output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
-            if not self.config_path.exists():
-                default_config = """\
-output: modpacks
-temp_path: build
-"""
+            if self.config_path.exists():
                 with open(self.config_path, 'w') as outfile:
                     outfile.write(default_config)
+                with open(self.config_path) as infile:
+                    output.write(infile.read())
 
-            with open(self.config_path) as infile:
-                output.write(infile.read())
             self.config_str = output.getvalue()
             output.close()
 
