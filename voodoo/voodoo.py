@@ -123,6 +123,8 @@ class Voodoo:
         if not pack_config_path.exists():
             print(f"no such file: {pack_config_path}")
             exit(-1)
+        else:
+            print(f"found: {pack_config_path}")
 
         output = io.StringIO()
         output.write(self.config_str)
@@ -274,7 +276,11 @@ class Voodoo:
 
             assert_dict('fill_information', ('name', 'package_type'), entries)
 
-            # print(f'fill info entries: \n{yaml.dump(entries)}')
+            if self.debug:
+                print(f'fill info entries: \n{yaml.dump(entries)}')
+
+            if self.debug:
+                print("generating graph")
             generate_graph(entries, path=data_path, pack_name=pack_name)
 
             for entry in entries:
@@ -393,7 +399,7 @@ class Voodoo:
             with open(modpack_path, 'w') as modpack_file:
                 json.dump(modpack, modpack_file, indent=4 * ' ')
 
-            self.add_to_workspace(location=pack_base)
+            self.add_to_workspace(location=pack_base, output_path=output_path)
 
         except KeyError as ke:
             tb = traceback.format_exc()
@@ -410,8 +416,8 @@ class Voodoo:
                 print(tb)
             raise ke
 
-    def add_to_workspace(self, location: str):
-        output_path = self.global_config['output']
+    def add_to_workspace(self, location: str, output_path: Path):
+        # output_path = self.global_config['output']
         path = Path(output_path,
                     '.modpacks', 'workspace.json')
         Path(path.parent).mkdir(parents=True, exist_ok=True)

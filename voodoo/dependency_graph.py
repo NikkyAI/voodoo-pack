@@ -55,6 +55,7 @@ def generate_graph(entries: List[dict], path: Path, pack_name: str):
 
     for entry in entries:
         name = entry.get('name', entry.get('file_name')) or 'unnamed'
+        name_stripped = name.replace(":", "")
         side = Side.get(entry.get('side', 'both'))
 
         feature_name = entry.get('feature_name')
@@ -72,14 +73,15 @@ def generate_graph(entries: List[dict], path: Path, pack_name: str):
 
                 feature.attr(fillcolor=fillcolor)
                 feature.attr(label=feature_name + '\n' + entry.get('description', ''))
-                feature.node(name, color=side_color[side], style='filled')
+                feature.node(name_stripped, color=side_color[side], style='filled')
                 # if recommendation:
                 #     feature.node(f'{feature_name}_{recommendation}', recommendation, style='filled,dashed', fillcolor=recommendation_color[recommendation])
         else:
-            dot.node(name, name, style='filled', fillcolor=side_color[side])
+            dot.node(name_stripped, name, style='filled', fillcolor=side_color[side])
 
     for entry in entries:
         name = entry.get('name', entry.get('file_name'))
+        name_stripped = name.replace(":", "")
         depends = entry.get('depends', {})
         for dep_type, dep_list in depends.items():
             for dependency in dep_list:
@@ -91,7 +93,7 @@ def generate_graph(entries: List[dict], path: Path, pack_name: str):
                         dot.node(dependency, dependency, style='filled,dotted', fillcolor='dimgray')
                     # continue #TODO: add option to skip
 
-                dot.edge(name, dependency, style=depedency_style[dep_type], len='3.0')
+                dot.edge(name_stripped, dependency, style=depedency_style[dep_type], len='3.0')
 
                 
 

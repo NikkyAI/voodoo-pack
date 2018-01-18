@@ -91,6 +91,10 @@ mods:
   - <<: [*curse, *feature]
     name: RFTools Dimensions
 
+  - Biome Bundle
+  - "OTG: Skylands"
+  - "OTG: The Void"
+
   # - <<: [*local, *client, *feature]
   #   file: OptiFine_1.12.2_HD_U_C6.jar
   #   recommendation: avoid

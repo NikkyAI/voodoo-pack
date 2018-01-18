@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='voodoo',
-    version='0.5',
+    version='0.5.1',
     description='Automated modpack building utility',
     url='https://github.com/NikkyAI/voodoo-pack',
     author='NikkyAi',
