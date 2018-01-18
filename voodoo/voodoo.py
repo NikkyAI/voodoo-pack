@@ -105,22 +105,22 @@ class Voodoo:
 
         pack_config_path = Path(self.pack)
 
-        if not pack_config_path.exists():
+        if not pack_config_path.is_file():
             print(f"no such file: {pack_config_path}")
             pack_config_path = Path(f"{self.pack}.yaml")
 
         if not pack_config_path.is_absolute():
-            if not pack_config_path.exists():
+            if not pack_config_path.is_file():
                 print(f"no such file: {pack_config_path}")
                 pack_config_base = Path(self.config_path, self.global_config.get('packs'))
                 pack_config_path = pack_config_base / self.pack
 
-            if not pack_config_path.exists():
+            if not pack_config_path.is_file():
                 print(f"no such file: {pack_config_path}")
                 pack_config_base = Path(self.config_path, self.global_config.get('packs'))
                 pack_config_path = pack_config_base / f"{self.pack}.yaml"
 
-        if not pack_config_path.exists():
+        if not pack_config_path.is_file():
             print(f"no such file: {pack_config_path}")
             exit(-1)
         else:
