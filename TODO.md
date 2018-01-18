@@ -1,4 +1,7 @@
-register handlers for types: [ curse, github, maven, jenkins, direct, local ]
+## Fix
+
+Warning: node OTG, port  Skylands unrecognized
+Warning: node OTG, port  The Void unrecognized
 
 ## split resolve and download
 - prepare config

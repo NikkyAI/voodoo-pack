@@ -1,0 +1,315 @@
+# output: modpacks
+name: openpack
+title: Open Source Adventure
+mc_version: ["1.12.2", "1.12.1", "1.12"]
+
+optionals: false
+
+forge: "latest" # `version`(-recommended /-latest) or branch-name
+
+urls: true
+release_type:
+  - Release
+
+mods:
+#===========#
+# Core Pack #
+#===========#
+  # Vazkii
+  - Quark
+
+  # some nerd
+  - Lingering Loot
+
+  # TehNut
+  - Hwyla
+
+  # kroeser
+  - Structured Crafting
+  - Integrated Dynamics
+  - Integrated Tunnels
+
+  # Kihira
+  - Tails
+
+  # Sangar
+  - OpenComputers
+  - TIS-3D
+  - Bedrock Ores
+  - Architect
+
+  # AlgorithmX2
+  - Chisels & Bits
+  - Ambidextrous
+
+  # Greymark
+  - Roguelike Dungeons
+
+  # BlackJar72
+  - Doomlike Dungeons
+
+  # InsomniaKitten
+  - Armor Sound Tweak
+  - Persistent Cake
+  - Just Enough Torches (JET)
+
+  # xalcon
+  - TorchMaster
+
+  # Tamaized
+  - Melon Golem
+
+  # universal
+  - VanillaAutomation
+  - IIDY
+
+  # copygirl!
+  - Wearable Backpacks
+
+  # Phylogeny
+  - Extra Bit Manipulation
+
+  # CD4017BE
+  - Automated Redstone
+  - Inductive Logistics
+
+  # Guichaguri
+  - BetterFps
+
+  # mezz
+  - Just Enough Items (JEI)
+
+  # BlayTheNinth
+  - Cooking for Blockheads
+  - KleeSlabs
+  - GravelMiner
+  - CraftingCraft
+  - Crafting Tweaks
+  - Refined Relocation 2
+
+  # elucent
+  - Simple Gravel Ores
+
+  # Hunternif
+  - Antique Atlas
+
+  # LalalaStab
+  - Felling
+
+  # Alsnder
+  - Earthworks
+
+  # mangoose3039
+  - Rustic
+  - Adventurer's Toolbox
+  - Nether Chest
+
+  # WhichOnesPink
+  - Passable Leaves
+
+  # ZLainSama
+  - Cosmetic Armor Reworked
+
+  # dmillerw
+  - Passthrough Signs
+
+  # eractnodi
+  - Edible Bugs
+
+  # KnightMiner
+  - Ceramics
+
+  # gr4pefish
+  - Open Glider
+
+  # konwboj
+  - Tumbleweed
+
+  # Girafi
+  - Waddles
+
+  # P3pp3rF1y
+  - Reliquary v1.3
+
+  # GotoLink
+  - "stimmedcow : NoMoreRecipeConflict"
+
+  # Chaosyr
+  - Nature's Compass
+
+  # asie
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: CharsetMC/Charset/1.12
+    name: Charset
+  - InventoryNeko
+
+  # Benimatic
+  - The Twilight Forest
+
+
+  # mods we wish were open source but they're not
+  #- Repose
+  #- Multi Mine
+  #- Pokecube
+
+  # shadowfacts
+  - Large Veins
+  - Extra Rails
+  - Redstone Remote
+  - Waypoint Compass
+  - Underwater Utilities
+
+  # WesCook
+  - <<: *direct
+    name: "Nutrition"
+    url: "https://github.com/WesCook/Nutrition/releases/download/v2.6.0/Nutrition-1.12.2-2.6.0.jar"
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/ProbeDataProvider/1.12
+    name: ProbeDataProvider
+
+  #
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/FruitPhone/1.12
+    name: FruitPhone
+    depends:
+      required:
+        - ProbeDataProvider
+
+  - <<: *direct
+    url: "https://asie.pl/files/mods/FoamFix/foamfix-0.8.2-1.12.2-anarchy.jar"
+
+
+#================#
+# Server Tooling #
+#================#
+  # CarrotCodes
+  - <<: [*curse, *server]
+    name: "Thump"
+    release_type:
+    - Release
+    - Beta
+
+  # team_otg
+  - <<: [*curse, *server]
+    name: "Biome Bundle"
+
+  # some nerd
+  - <<: [*curse, *server]
+    name: "BTFU continuous rsync incremental backup"
+
+  - <<: [*curse, *server]
+    name: "WorldEdit"
+
+  # McJty
+  - <<: [*curse, *server]
+    name: "In Control!"
+
+
+#========================#
+# Client Quality of Life #
+#========================#
+  # BlayTheNinth
+  - <<: [*curse, *client]
+    name: "Default Options"
+
+  - <<: [*curse, *client]
+    name: "Ding"
+    description: "NON-FREE.  Plays a ding when the pack is finished loading."
+    selected: false
+    feature_name: "nonfree"
+    depends:
+      required:
+        - ReAuth
+
+  - <<: [*curse, *client]
+    name: "ReAuth"
+    description: "NON-FREE.  Allows re-authenticating to mojang without restarting the game."
+    selected: false
+
+  # feldim2425
+  - <<: [*curse, *client]
+    name: "More Overlays"
+
+  # squeek502
+  - <<: [*curse, *client, *feature]
+    name: "Squeedometer"
+  - <<: [*curse, *client]
+    name: "Waila Harvestability"
+  - <<: [*curse, *client]
+    name: "AppleSkin"
+
+  - <<: [*curse, *client, *feature]
+    name: "NoNausea"
+
+  # InsomniaKitten
+  - <<: [*curse, *client, *feature]
+    name: "IKWID (I Know What I'm Doing)"
+    description: "Skips the new early game crafting tutorials."
+    selected: false
+
+  # masa
+  - <<: [*curse, *client, *feature]
+    name: "MiniHUD"
+  - <<: [*curse, *client]
+    name: "Placement Preview"
+  - <<: [*curse, *client, *feature]
+    name: "Item Scroller"
+    release_type:
+    - Release
+    - Beta
+
+  # BlayTheNinth
+  - <<: [*curse, *client]
+    name: "Client Tweaks"
+  - <<: [*curse, *client]
+    name: "Chat Tweaks"
+
+  # universal
+  - <<: [*curse, *client]
+    name: "InfoTooltip"
+
+  # mezz
+  - <<: [*curse, *client]
+    name: "Mod Name Tooltip"
+
+  # dmillerw
+  - <<: [*curse, *client]
+    name: "MineMenu"
+
+  # octarine_noise
+  - <<: [*curse, *client]
+    name: "Better Foliage"
+
+  # Chaosyr
+  - <<: [*curse, *client]
+    name: "Notes"
+
+
+#=============================#
+# Extra Stuff for Test Server #
+#=============================#
+
+  # Falkreon
+  - <<: *direct
+    name: "Thermionics"
+    url: "https://github.com/elytra/Thermionics/releases/download/MC1.12.2_v1.1.2/Thermionics-MC1.12_ver1.1.2.jar"
+
+  # squeek502
+  - Squake
+
+  # jaquadro
+  - Storage Drawers
+
+  # some nerd
+  - <<: [*direct, *server]
+    name: "NuclearOption"
+    url: "https://ci.elytradev.com/job/elytra/job/NuclearOption/job/master/8/artifact/build/libs/NuclearOption-1.12-2.5.jar"
+
+  # darkevilmac
+  - <<: *direct
+    name: "Oops"
+    url: "https://ci.elytradev.com/job/elytra/job/Oops/job/1.12/15/artifact/build/libs/oops-1.12-5.15.jar"

@@ -1,0 +1,295 @@
+# output: modpacks
+name: cotm
+title: Center of the Multiverse
+mc_version: ["1.12.2", "1.12.1", "1.12"]
+forge: "latest" # `version`(-recommended /-latest) or branch-name
+urls: true
+provider_settings:
+  curse:
+    <<: *curse_settings
+    optional: false
+    release_type: [ Alpha, Beta, Release ]
+mods:
+#===========#
+# Core Pack #
+#===========#
+  # coolAlias
+  - Dynamic Sword Skills
+  
+  # moddinglegacy
+  - Aether Legacy
+  
+  # Vazkii
+  - Akashic Tome
+  - Botania
+  
+  # Purpilicious_Cow and RazzleberryFox
+  - Animania
+  
+  # Tamaized
+  - Angel of Vengeance
+  
+  # Sangar
+  - Architect
+  - Bedrock Ores
+  # Darkevilmac
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/ArchitectureCraft/1.12
+    name: "ArchitectureCraft"
+  
+  # csb987
+  - Armor Stand Configurator
+  - Combined Potions
+  
+  # HellFirePvP
+  - Astral Sorcery
+  
+  # Azanor
+  - Baubles
+  
+  # Way2muchnoise
+  - Better Advancements
+  
+  # Portablejim
+  - "Better Builder's Wands"
+  
+  # Nuchaz
+  - BiblioCraft
+  
+  # Binnie
+  - "Binnie's Mods" # TODO: where are the 1.12 versions ?
+  
+  # Glitchfiend, Forstride
+  - Bullseye
+  
+  # asie
+  - <<: *direct
+    url: http://centerofthemultiverse.net/launcher/dist/Charset-0.5.0.128.jar
+  - <<: *direct
+    url: http://centerofthemultiverse.net/launcher/dist/CharsetPatches-0.1.3.jar
+  - <<: *direct
+    url: https://unascribed.com/foamfix/FoamFix-1.12.2-0.8.4-Anarchy.jar
+  - Unlimited Chisel Works
+  # chiselTeam
+  - Chisel
+  # AlgorithmX2
+  - Chisels & Bits
+  # clienthax, xalcon
+  - ChocoCraft
+  
+  # jaredlll08
+  - Clumps
+  # KevinGames_17
+  - Colored Water
+  # TheIllusiveC4
+  - Colytra
+  - Comforts
+  # bdew
+  - Compacter
+  # BlayTheNinth
+  - Cooking for Blockheads
+  - Crafting Tweaks
+  - Waystones
+  - TrashSlot
+  # ZLainSama
+  - Cosmetic Armor Reworked
+  # jaredlll08
+  - CraftTweaker
+  - Currency
+  - Cyberware
+  - "Bailey's Dailies"
+  - Diamond Glass
+  - <<: *direct
+    url: http://centerofthemultiverse.net/launcher/dist/dimdoors-3.0.0-beta-4.jar
+  - The Disenchanter Mod
+  - Doggy Talents
+  - Draconic Evolution
+  - Dynamic Surroundings
+  - Embers
+  - Enchiridion
+  - Ender Storage
+  - Environmental Tech
+  - ET Lunar [Environmental Tech Addon]
+  - EverlastingAbilities
+  - Exchangers
+  - Extra Alchemy
+  - Extra Bit Manipulation
+  - Extra Rails
+  - Extra Utilities
+  - Fairy Lights
+  - Farming for Blockheads
+  - Flux Networks
+  - Forestry
+  - FTB Utilities
+  - MrCrayfish's Furniture Mod
+  - Gendustry
+  - Grappling Hook Mod
+  - GraveStone Mod
+  - Hardcore Revival
+  - HelpFixer
+  - Hwyla
+  - Initial Inventory
+  - Inventory Tweaks
+  - Iron Backpacks
+  - Iron Chests
+  # copgirl
+  - Wearable Backpacks
+  # TheLMiffy1111
+  - JAOPCA
+  - Just Enough HarvestCraft (JEHC)
+  # mezz
+  - Just Enough Items (JEI)
+  - JEI Bees
+  - Just Enough Torches (JET)
+  - JourneyMap
+  - Just Enough Dimensions
+  - KleeSlabs
+  - 'Level Up!'
+  - Magic Bees
+  - MagicBooks2
+  - Magic Feather
+  - MalisisDoors
+  # dmillerw
+  - <<: [*curse, *client]
+    name: "MineMenu"
+  - Mob Grinding Utils
+  - ModTweaker
+  - More Bees
+  - More Shearables
+  - Natura
+  - Nature's Compass
+  - NetherEx
+  - NetherPortalFix
+  - 'stimmedcow : NoMoreRecipeConflict'
+  - NotEnoughIDs
+  - OpenComputers
+  - OpenBlocks
+  # keridos
+  - OpenModularTurrets
+  # team_otg
+  - Biome Bundle
+  - 'OTG: Skylands'
+  - 'OTG: The Void'
+  - Packing Tape
+  - Pam's HarvestCraft
+  - Passthrough Signs
+  - Platforms
+  - Psi
+  - Quark
+  - Random Things
+  - Ranged Pumps
+  - Recurrent Complex
+  - Redstone Arsenal
+  - Redstone Flux
+  - Refined Storage
+  - Refined Storage Addons
+  - Reliquary
+  - RFTools
+  - Roguelike Dungeons
+  - Roots
+  - Rope Bridge
+  - Rustic
+  - Scannable
+  - Signals
+  - Simple Sponge
+  - Simple Teleporters
+  - Spartan Shields
+  - The Spice of Life
+  - Storage Drawers
+  - Storage Drawers Extras
+  - Tails
+  - TamModized
+  - Teckle
+  - Terraqueous
+  - '[ANGRY PIXEL] The Betweenlands Mod'
+  - The One Wrench (All in One Edition)
+  - Thermal Cultivation
+  
+  # Team CoFH
+  - Thermal Dynamics
+  - Thermal Expansion
+  
+  # Falkreon
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/Thermionics/master
+    name: "Thermionics"
+    
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/ThermionicsWorld/master
+    name: "ThermionicsWorld"
+    
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/Engination/master
+    name: "Engination"
+    
+  # unascribed
+
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/GlassHearts/1.12
+    name: "GlassHearts"
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/ProbeDataProvider/1.12
+    name: ProbeDataProvider
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/FruitPhone/1.12
+    name: FruitPhone
+    depends:
+      required:
+        - ProbeDataProvider
+
+ # capitalthree
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: elytra/LingeringLoot/master
+    name: "LingeringLoot"
+  - <<: *jenkins
+    jenkins_url: https://ci.elytradev.com
+    job: capitalthree/TinkeredConstructer/master
+    name: "TinkersConstruct" # fake the name to satisfy dependencies
+
+  - The Spotlight Mod
+  - TickProfiler
+  - Tinkers' Tool Leveling
+  - Tool Belt
+  - TorchMaster
+  - Totemic
+  # Benimatic
+  - The Twilight Forest
+  # The_Wabbit
+  - Upsizer Mod
+  # Bartz24
+  - Useful Nullifiers
+  # Viesis
+  - "ViesCraft - Airships!"
+  # Face of Cat
+  - Villager Market
+  # gegy1000, JurassicAlien_KOC_owner
+  - Wearables
+  # CenturianFox13
+  - Wolf Armor and Storage
+  # Ipsis
+  - Woot
+  
+  # TehNut
+  - Xtones
+  
+  # Raven2396
+  - Yoyos
+  
+  
+#============#
+# Clientside #
+#============#
+  - <<: [*curse, *client]
+    name: "AppleSkin"
+  - <<: [*curse, *client]
+    name: BetterFps
+  - <<: [*curse, *client]
+    name: NoNausea

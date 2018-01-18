@@ -256,6 +256,9 @@ class BaseProvider:
 
     def write_direct_url(self, entry: dict, src_path: Path):
         url = entry.get('url')
+        direct = entry.get('direct', True)
+        if not direct:
+            return
         if url:
             url = unquote(entry['url'])
             url_path = Path(src_path, f"{entry['file_path']}.url.txt").resolve(strict=False)
