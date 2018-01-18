@@ -81,11 +81,18 @@ class BaseProvider:
                 if self.debug:
                     print(f'setting {attribute_key}, value={value}')
                 setattr(self, attribute_key, provider_settings[attribute_key])
+                self._defaults[attribute_key]=provider_settings[attribute_key]
 
     def apply_defaults(self, entry: dict):
+        if self.debug:
+            print(f"applying defaults for {entry}")
+            print(f"defaults: {self._defaults}")
+
         for key, value in self._defaults.items():
             if key not in entry:
                 entry[key] = value
+                if self.debug:
+                    print(f"{key} = {value}")
 
     def prepare_dependencies(self, entry: dict):
         pass
