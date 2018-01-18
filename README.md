@@ -89,7 +89,7 @@ install python-virtualenv
    `git clone https://github.com/NikkyAI/voodoo-pack.git`
 3. install \
    `pip uninstall -y voodoo && pip install .`
-4. run in some othert directory \
+4. run in some other directory \
    `voodoo`
 
 ## Configuration

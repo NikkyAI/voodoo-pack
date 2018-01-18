@@ -39,7 +39,7 @@ def main():  # TODO: move to __main__ ?
     args = vars(args)
 
     voodoo = Voodoo(**args)
-    voodoo.process_packs()
+    voodoo.process_pack()
 
 
 class Voodoo:
@@ -99,15 +99,30 @@ class Voodoo:
         #     auth_github = {'username': args.username, 'password': args.password}
         #     auth['github'] = auth_github
 
-    def process_packs(self):
-        self.process_pack(pack_base=self.pack)
-
-    def process_pack(self, pack_base: str):
+    def process_pack(self):
+        pack_base = self.pack
         print(f'processing {pack_base}')
 
-        pack_config_base = Path(
-            self.config_path, self.global_config.get('packs'))
-        pack_config_path = pack_config_base / f'{pack_base}.yaml'
+        pack_config_path = Path(self.pack)
+
+        if not pack_config_path.exists():
+            print(f"no such file: {pack_config_path}")
+            pack_config_path = Path(f"{self.pack}.yaml")
+
+        if not pack_config_path.is_absolute():
+            if not pack_config_path.exists():
+                print(f"no such file: {pack_config_path}")
+                pack_config_base = Path(self.config_path, self.global_config.get('packs'))
+                pack_config_path = pack_config_base / self.pack
+
+            if not pack_config_path.exists():
+                print(f"no such file: {pack_config_path}")
+                pack_config_base = Path(self.config_path, self.global_config.get('packs'))
+                pack_config_path = pack_config_base / f"{self.pack}.yaml"
+
+        if not pack_config_path.exists():
+            print(f"no such file: {pack_config_path}")
+            exit(-1)
 
         output = io.StringIO()
         output.write(self.config_str)
@@ -138,7 +153,7 @@ class Voodoo:
             with open(merged_config_path, 'w') as outfile:
                 outfile.write(config_str)
 
-        output_path = Path(pack_config.get('output') or 'modpacks', pack_base)
+        output_path = Path(pack_config.get('output') or 'modpacks', pack_config.get('name'))
         data_path = Path(pack_config.get('data_path', 'data'))
         assert not data_path.is_absolute(), 'data_path has to be relative to the output path'
         data_path = Path(output_path, data_path)
