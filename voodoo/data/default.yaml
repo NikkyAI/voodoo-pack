@@ -63,7 +63,7 @@ pack_defaults:
     type: jenkins
     # jenkins_url: null
     # job: null
-    file_name_regex: '.*(?<!-sources\.jar)(?<!-api\.jar)$'
+    file_name_regex: '.*(?<!-sources\.jar)(?<!-api\.jar)(?<!-deobf\.jar)$'
     package_type: mod
     path: mods
 
