@@ -39,7 +39,7 @@ class DirectProvider(BaseProvider):
         if 'cache_base' not in entry:
             entry['cache_base'] = str(cache_base)
         if 'cache_path' not in entry:
-            cache_path = Path(entry['cache_base'], url_path.parent)
+            cache_path = Path(entry['cache_base'], url_path.parent, url_path.stem)
             entry['cache_path'] = str(cache_path)
 
     def download(self, entry: dict, pack_path: Path):
