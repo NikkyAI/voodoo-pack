@@ -377,7 +377,7 @@ class Voodoo:
             # generate modpack obj
             modpack = {
                 'name': pack_name,
-                'title': None,
+                'title': pack_config['title'],
                 'gameVersion': str(mc_version[0]),
                 'features': features_list,
                 'userFiles': {
@@ -399,7 +399,7 @@ class Voodoo:
             with open(modpack_path, 'w') as modpack_file:
                 json.dump(modpack, modpack_file, indent=4 * ' ')
 
-            self.add_to_workspace(location=pack_base, output_path=output_path)
+            self.add_to_workspace(location=pack_base, modpacks_path=pack_config.get('output') or 'modpacks')
 
         except KeyError as ke:
             tb = traceback.format_exc()
@@ -416,9 +416,9 @@ class Voodoo:
                 print(tb)
             raise ke
 
-    def add_to_workspace(self, location: str, output_path: Path):
-        # output_path = self.global_config['output']
-        path = Path(output_path,
+    def add_to_workspace(self, location: str, modpacks_path: Path):
+        location = Path(location).stem
+        path = Path(modpacks_path,
                     '.modpacks', 'workspace.json')
         Path(path.parent).mkdir(parents=True, exist_ok=True)
 

@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
-from urllib.parse import unquote
+from urllib.parse import quote
 
 import ruamel.yaml as yaml
 
@@ -267,7 +267,9 @@ class BaseProvider:
         if not direct:
             return
         if url:
-            url = unquote(entry['url'])
+            url, filename = url.rsplit("/", 1)
+            filename = quote(filename, safe="/")
+            url = url + "/" + filename
             url_path = Path(src_path, f"{entry['file_path']}.url.txt").resolve(strict=False)
             Path(url_path.parent).mkdir(parents=True, exist_ok=True)
 
