@@ -28,7 +28,7 @@ pack_defaults:
     type: direct
     url: null
     # file_name: null
-    package_type: mod
+    # package_type: mod
     path: mods
 
   curse: &curse
@@ -64,7 +64,7 @@ pack_defaults:
     # jenkins_url: null
     # job: null
     file_name_regex: '.*(?<!-sources\.jar)(?<!-api\.jar)(?<!-deobf\.jar)(?<!-lib\.jar)$'
-    package_type: mod
+    # package_type: mod
     path: mods
 
   local: &local

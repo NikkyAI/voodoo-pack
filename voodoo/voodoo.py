@@ -35,6 +35,8 @@ def main():  # TODO: move to __main__ ?
     # parser.add_argument('--password_github', help='github password')
     parser.add_argument('--debug', dest='debug',
                         action='store_true', help='display debug info')
+    parser.add_argument('--export', dest='export',
+                        action='store_true', help='export into new format, look in data directory for exported pack')
     args, unknown = parser.parse_known_args()
     args = vars(args)
 
@@ -46,8 +48,9 @@ class Voodoo:
     forge_data = None
     sponge_entry = None
 
-    def __init__(self, config, debug, pack):
+    def __init__(self, config, debug, pack, export):
         self.debug = debug
+        self.export = export
         if self.debug:
             print('using encoding {}'.format(sys.stdout.encoding))
         self.config_path = Path(config).resolve()
@@ -212,7 +215,10 @@ class Voodoo:
                     all_missing[entry_id] = missing
             assert not fail, f'{check_name} missing values {all_missing}'
             # raise KeyError(all_missing)
-
+        
+        if self.export:
+            self.exPort(mods, mc_version, pack_base, pack_name, data_path)
+        
         entries = []
         for mod in mods:
 
@@ -220,6 +226,7 @@ class Voodoo:
             if provider:
                 entry = provider.convert(mod)
                 entries.append(dict(entry))
+
 
         if sponge_version:
             entries.append(self.get_sponge(sponge_version))
@@ -401,6 +408,7 @@ class Voodoo:
 
             self.add_to_workspace(location=pack_base, modpacks_path=pack_config.get('output') or 'modpacks')
 
+
         except KeyError as ke:
             tb = traceback.format_exc()
             arg = ke.args[0]
@@ -532,3 +540,42 @@ class Voodoo:
         )
         self.sponge_entry = entry
         return entry
+
+
+    def exPort(self, mods: List[Any], mc_version, pack_base, pack_name, data_path):
+        # export new config
+        def rename(mod, old, new):
+            if old in mod:
+                mod[new] = mod[old]
+                del mod[old]
+
+        for mod in mods:
+            if(isinstance(mod, str)):
+                continue
+            if "side" in mod:
+                mod["side"] = mod["side"].upper()
+            if 'type' in mod:
+                mod['provider'] = mod["type"].upper()
+                del mod["type"]
+            if 'path' in mod:
+                del mod["path"]
+            if "selected" in mod:
+                mod["feature"] = dict(selected=True)
+                del mod["selected"]
+            
+            rename(mod, "file_name_regex","jenkinsFileNameRegex")
+            rename(mod, "depends","dependencies")
+            rename(mod, "package_type","packageType")
+            rename(mod, "jenkins_url","jenkinsUrl")
+            rename(mod, "release_type","releaseTypes")
+
+        modpack = dict(
+            name=pack_base,
+            mcVersion=mc_version[0],
+            validMcVersions=mc_version[1:],
+            mods=mods
+        )
+
+        with open(data_path / f"{pack_base}.yaml", 'w') as outfile:
+            outfile.write(yaml.dump(modpack, default_flow_style=False))
+        exit()

@@ -1,3 +1,16 @@
+## Test curse urls
+regex='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$'
+
+while read line
+do
+        if [[ $line =~ $regex ]]
+        then 
+                echo "OK"
+        else
+                echo "$line"
+        fi
+done
+
 ## Fix
 
 Warning: node OTG, port  Skylands unrecognized
