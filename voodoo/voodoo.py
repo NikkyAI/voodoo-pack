@@ -542,15 +542,13 @@ class Voodoo:
         return entry
 
 
+
     def exPort(self, pack_config_path, pack_base): #mods: List[Any], mc_version, pack_base, pack_name, data_path):
         output = io.StringIO()
 
         default_config = pkg_resources.resource_string(__name__, 'data/default_export.yaml').decode()
         output.write(default_config)
         
-        output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
-        print(type(pack_config_path))
-        print(pack_config_path)
         if pack_config_path.exists():
             with open(pack_config_path) as infile:
                 output.write(infile.read())
@@ -558,12 +556,13 @@ class Voodoo:
         config_str = output.getvalue()
         output.close()
 
-        pack_config = yaml.round_trip_load(config_str)
-        
-
         from collections import OrderedDict
         from ruamel.yaml.comments import CommentedMap
-        print(pack_config)
+        from ruamel.yaml import SafeConstructor, RoundTripDumper
+
+
+        pack_config = yaml.safe_load(config_str)
+ 
         mods = pack_config.get("mods")
         mc_version= pack_config.get('mc_version')
 
@@ -576,28 +575,25 @@ class Voodoo:
         # export new config
         def rename(mod: CommentedMap, old, new):
             if old in mod:
-                print(type(mod))
-                # mod[new] = mod[old]
-                # del mod[old]
-                # Replace the key and value for key == 0:
-                mod = CommentedMap((new, value) if key == old else (key, value) for key, value in mod.items())
-                return mod
-            # else:
-            #     print(f"no key {old}")
-            return mod
+                # mod = CommentedMap((new, value) if key == old else (key, value) for key, value in mod.items())
+                mod[new] = mod[old]
+                del mod[old]
 
         for mod in mods:
             print(mod)
+            print(type(mod))
             if(isinstance(mod, str)):
                 continue
-            # if "side" in mod:
-            #     # mod["side"] = mod["side"].upper()
-            #     del mod["side"]
             if 'type' in mod:
-                mod['provider'] = mod["type"].upper()
-                del mod["type"]
+                mod['provider'] = mod['type'].upper()
+                del mod['type']
+            if 'release_type' in mod:
+                mod['releaseTypes'] = [t.lower() for t in mod['release_type']]
+                del mod['release_type']
             if 'path' in mod:
                 del mod["path"]
+            if 'feature_name' in mod:
+                del mod["feature_name"]
             if "selected" in mod:
                 mod["feature"] = dict(selected=True)
                 del mod["selected"]
@@ -608,8 +604,9 @@ class Voodoo:
             rename(mod, "jenkins_url", "jenkinsUrl")
             rename(mod, "release_type", "releaseTypes")
             rename(mod, "file", "fileSrc")
-        pack_config.insert(3, ('validMcVersions'), mc_version[1:])
-        pack_config.insert(3, ('mcVersion'), mc_version[0])
+
+        pack_config['validMcVersions'] = mc_version[1:]
+        pack_config['mcVersion'] = mc_version[0]
         del pack_config['mc_version']
         rename(pack_config, 'optionals', 'doOptionals')
         if 'urls' in pack_config:
@@ -623,7 +620,9 @@ class Voodoo:
 
         pack_config['entries'] = pack_config['mods']
         del pack_config['mods']
-
+        del pack_config['defaults']
+        Dumper = yaml.RoundTripDumper
+        Dumper.ignore_aliases = lambda self, data: True
         with open(data_path / f"{pack_base}.yaml", 'w') as outfile:
-            outfile.write(yaml.round_trip_dump(pack_config, default_flow_style=False, indent=2))
+            outfile.write(yaml.dump(pack_config, default_flow_style=False, indent=2, Dumper=Dumper))
         exit()
