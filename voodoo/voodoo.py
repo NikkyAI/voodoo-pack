@@ -129,6 +129,9 @@ class Voodoo:
         else:
             print(f"found: {pack_config_path}")
 
+        if self.export:
+            self.exPort(pack_config_path, pack_base)
+
         output = io.StringIO()
         output.write(self.config_str)
         output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
@@ -215,9 +218,6 @@ class Voodoo:
                     all_missing[entry_id] = missing
             assert not fail, f'{check_name} missing values {all_missing}'
             # raise KeyError(all_missing)
-        
-        if self.export:
-            self.exPort(mods, mc_version, pack_base, pack_name, data_path)
         
         entries = []
         for mod in mods:
@@ -542,18 +542,57 @@ class Voodoo:
         return entry
 
 
-    def exPort(self, mods: List[Any], mc_version, pack_base, pack_name, data_path):
+    def exPort(self, pack_config_path, pack_base): #mods: List[Any], mc_version, pack_base, pack_name, data_path):
+        output = io.StringIO()
+
+        default_config = pkg_resources.resource_string(__name__, 'data/default_export.yaml').decode()
+        output.write(default_config)
+        
+        output.write('\n# END DEFAULTS\n\n# BEGIN CONFIG\n\n')
+        print(type(pack_config_path))
+        print(pack_config_path)
+        if pack_config_path.exists():
+            with open(pack_config_path) as infile:
+                output.write(infile.read())
+
+        config_str = output.getvalue()
+        output.close()
+
+        pack_config = yaml.round_trip_load(config_str)
+        
+
+        from collections import OrderedDict
+        from ruamel.yaml.comments import CommentedMap
+        print(pack_config)
+        mods = pack_config.get("mods")
+        mc_version= pack_config.get('mc_version')
+
+        output_path = Path(pack_config.get('output') or 'modpacks', pack_config.get('name'))
+        data_path = Path(pack_config.get('data_path', 'data'))
+        assert not data_path.is_absolute(), 'data_path has to be relative to the output path'
+        data_path = Path(output_path, data_path)
+        data_path.mkdir(parents=True, exist_ok=True)
+
         # export new config
-        def rename(mod, old, new):
+        def rename(mod: CommentedMap, old, new):
             if old in mod:
-                mod[new] = mod[old]
-                del mod[old]
+                print(type(mod))
+                # mod[new] = mod[old]
+                # del mod[old]
+                # Replace the key and value for key == 0:
+                mod = CommentedMap((new, value) if key == old else (key, value) for key, value in mod.items())
+                return mod
+            # else:
+            #     print(f"no key {old}")
+            return mod
 
         for mod in mods:
+            print(mod)
             if(isinstance(mod, str)):
                 continue
-            if "side" in mod:
-                mod["side"] = mod["side"].upper()
+            # if "side" in mod:
+            #     # mod["side"] = mod["side"].upper()
+            #     del mod["side"]
             if 'type' in mod:
                 mod['provider'] = mod["type"].upper()
                 del mod["type"]
@@ -563,19 +602,28 @@ class Voodoo:
                 mod["feature"] = dict(selected=True)
                 del mod["selected"]
             
-            rename(mod, "file_name_regex","jenkinsFileNameRegex")
-            rename(mod, "depends","dependencies")
-            rename(mod, "package_type","packageType")
-            rename(mod, "jenkins_url","jenkinsUrl")
-            rename(mod, "release_type","releaseTypes")
+            rename(mod, "file_name_regex", "jenkinsFileNameRegex")
+            rename(mod, "depends", "dependencies")
+            rename(mod, "package_type", "packageType")
+            rename(mod, "jenkins_url", "jenkinsUrl")
+            rename(mod, "release_type", "releaseTypes")
+            rename(mod, "file", "fileSrc")
+        pack_config.insert(3, ('validMcVersions'), mc_version[1:])
+        pack_config.insert(3, ('mcVersion'), mc_version[0])
+        del pack_config['mc_version']
+        rename(pack_config, 'optionals', 'doOptionals')
+        if 'urls' in pack_config:
+            del pack_config['urls']
+        if 'release_type' in pack_config:
+            del pack_config['release_type']
+        
+        if 'optionals' in pack_config:
+            pack_config['doOptionals'] = pack_config['optionals']
+            del pack_config['optionals']
 
-        modpack = dict(
-            name=pack_base,
-            mcVersion=mc_version[0],
-            validMcVersions=mc_version[1:],
-            mods=mods
-        )
+        pack_config['entries'] = pack_config['mods']
+        del pack_config['mods']
 
         with open(data_path / f"{pack_base}.yaml", 'w') as outfile:
-            outfile.write(yaml.dump(modpack, default_flow_style=False))
+            outfile.write(yaml.round_trip_dump(pack_config, default_flow_style=False, indent=2))
         exit()

@@ -1,0 +1,29 @@
+defaults:
+  direct: &direct
+    type: DIRECT
+    url: ''
+
+  curse: &curse
+    type: CURSE
+    name: ''
+
+  jenkins: &jenkins
+    type: JENKINS
+    jenkinsFileNameRegex: '.*(?<!-sources\.jar)(?<!-api\.jar)(?<!-deobf\.jar)(?<!-lib\.jar)$'
+
+  local: &local
+    type: LOCAL
+    fileSrc: null
+
+  side:
+    client: &client
+      side: CLIENT
+    
+    server: &server
+      side: SERVER
+
+  feature: &feature
+    feature:
+      selected: true
+
+
